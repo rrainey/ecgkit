@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2009 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+
+    <string name="app_name">Maker ECG</string>
+    <string name="app_short_name">Maker ECG</string>
+    <string name="app_long_name">Maker ECG Arduino 2012</string>
+    
+    <!--  DeviceListActivity -->
+    <string name="title_paired_devices">Paired Devices</string>
+    <string name="title_other_devices">Other Available Devices</string>
+    <string name="button_scan">Scan for devices</string>
+    <string name="select_device">select a device to connect</string>
+    <string name="none_paired">No devices have been paired</string>
+    <string name="scanning">scanning for devices&#8230;</string>
+    <string name="none_found">No devices found</string>
+    
+    <!--  BluetoothOscilloscope -->
+    <string name="button_connect">Connect</string>
+    <string name="adk_description">A picture of the 2012 ADK.</string><string name="bluetooth">Use Bluetooth</string><string name="bluetooth_name_hint">Choose a name to be used for this Bluetooth device</string><string name="bt_not_enabled_leaving">Bluetooth is not enabled. The application will exit.</string>
+    <string name="change_bt_name">Change Bluetooth Name</string><string name="ch1_scale_default">200mV</string><string name="ch2_scale_default">500mV</string><string name="connect_please">Your Arduino is not connected.</string><string name="title_connected_to">connected to: </string>
+    <string name="title_connecting">connecting&#8230;</string>
+    <string name="title_not_connected">not connected</string>
+    <string name="not_connected">You are not connected to a device</string>
+    <string name="status_label">Status</string>
+    <string name="status_off">Pause</string>
+    <string name="status_on">Run</string>
+    
+    
+    
+    
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_bluetooth_connection">Bluetooth Connection</string><string name="menu_save">Save</string><string name="menu_settings">Settings</string>
+    
+    
+    <string name="plug_in_or_use_bluetooth">Please plug in the USB device or use Bluetooth to connect to your Arduino.</string>
+    
+    
+    
+    <plurals name="number_of_presets_deleted">
+        <item quantity="one">Deleted one preset.</item>
+        <item quantity="two">Deleted two presets.</item>
+        <item quantity="other">Deleted %d presets.</item>
+    </plurals>
+    
+    <string name="set_bt_name_title">Set Bluetooth Name</string>
+    <string name="set_bt_name_ok">OK</string>
+    <string name="set_bt_name_cancel">Cancel</string>
+    <string name="set_preferences">Preferences</string>
+    <string name="timebase_default">200us</string>
+    <string name="title_activity_main">Maker ECG</string>
+    <string name="filter_a_on">Filter A</string>
+    <string name="filter_b_on">Filter B</string>
+    
+    
+    
+ 
+</resources>
