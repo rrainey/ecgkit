@@ -53,7 +53,7 @@ import android.widget.ToggleButton;
 
 public class ECGActivity extends Activity implements Callback, Runnable {
 	
-	private static final boolean gLogPackets = false;
+	private static final boolean gLogPackets = true;
 	
 	private Handler mDeviceHandler;
 	private Handler mSettingsPollingHandler;
@@ -417,7 +417,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		b[6] = 0;
 		
 		b[7] = 100;	/* u16 - low byte */
-		b[8] = 0;		/* u16 - high byte */
+		b[8] = 0;	/* u16 - high byte */
 		
 		sendCommand( CMD_X_TELEMETRY_STATE, CMD_X_TELEMETRY_STATE, b );
 	}
@@ -461,7 +461,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		//sendCommand(CMD_ALARM_FILE, CMD_ALARM_FILE);
 		//listDirectory(TUNES_FOLDER);
 
-		Thread thread = new Thread(null, this, "Maker ECG 2012");
+		Thread thread = new Thread(null, this, "Maker ECG");
 		thread.start();
 	}
 

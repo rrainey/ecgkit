@@ -269,6 +269,8 @@ public class ECGRendererGL implements Renderer {
 
 			if ( nCount > 1 ) {
 
+				gl.glLineWidthx(4);
+
 				gl.glColor4f( 0.0f, 1.0f, 0.0f, 1.0f );
 			    
 			    //_ecgTraceBuffer = toFloatBuffer( _fPoint, nCount );

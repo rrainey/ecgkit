@@ -47,7 +47,7 @@
     <string name="menu_bluetooth_connection">Bluetooth Connection</string><string name="menu_save">Save</string><string name="menu_settings">Settings</string>
     
     
-    <string name="plug_in_or_use_bluetooth">Please plug in the USB device or use Bluetooth to connect to your Arduino.</string>
+    <string name="plug_in_or_use_bluetooth">Use Bluetooth or plug in a USB cable to connect your Arduino.</string>
     
     
     

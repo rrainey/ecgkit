@@ -18,11 +18,13 @@ package com.example.makerecg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 
 public class BTConnection extends Connection {
 
@@ -33,6 +35,8 @@ public class BTConnection extends Connection {
 			.fromString("1dd35050-a437-11e1-b3dd-0800200c9a66");
 
 	public BTConnection(String address) {
+
+        /*
 		mAdapter = BluetoothAdapter.getDefaultAdapter();
 		BluetoothDevice device = mAdapter.getRemoteDevice(address);
 		try {
@@ -40,7 +44,43 @@ public class BTConnection extends Connection {
 					.createInsecureRfcommSocketToServiceRecord(MY_UUID_INSECURE);
 			mSocket.connect();
 		} catch (IOException e) {
+			Log.e(ADK.TAG, "exception while attempting connection BT device " + address);
+			e.printStackTrace();
 		}
+		*/
+
+        mAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothDevice device = mAdapter.getRemoteDevice(address);
+
+        try {
+            mSocket = device.createRfcommSocketToServiceRecord(MY_UUID_INSECURE);
+        } catch (Exception e) {Log.e("","Error creating socket");}
+
+        try {
+            mSocket.connect();
+            Log.e("","Connected to " + address);
+        } catch (IOException e) {
+
+            Log.e("", e.getMessage());
+            try {
+                Log.e("", "trying fallback...");
+
+                mSocket = (BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[]{int.class}).invoke(device, 1);
+                mSocket.connect();
+
+                Log.e("", "Connected to BT " + address);
+
+            } catch (InvocationTargetException e1) {
+                e1.printStackTrace();
+            } catch (NoSuchMethodException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            } catch (IllegalAccessException e1) {
+                e1.printStackTrace();
+            }
+
+        }
 	}
 
 	@Override
