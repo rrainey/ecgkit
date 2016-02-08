@@ -25,10 +25,11 @@ public class ADSampleQueue {
 	 * total sample set
 	 */
 	protected Queue<ADSampleFrame> _sampleBlocks;
+	protected Queue<ADSampleFrame> _writeableSampleBlocks;
 	protected long _activeElapsedTime_ms;
 	protected long _totalElapsedTime_ms;
 	
-	protected long _lMaximumElapsedTimeHistory_ms = 120000;
+	protected long _lMaximumElapsedTimeHistory_ms = 240000;
 	
 	protected final static String TAG = "ADSampleQueue";
 	
@@ -57,6 +58,7 @@ public class ADSampleQueue {
 	private ADSampleQueue() {
 		_sampleBlocks = new LinkedBlockingQueue<ADSampleFrame>();
 		_activeSampleBlocks = new LinkedBlockingQueue<ADSampleFrame>();
+		_writeableSampleBlocks = new LinkedBlockingQueue<ADSampleFrame>();
 		_activeElapsedTime_ms = 0;
 		_totalElapsedTime_ms = 0;
 		_queueState = QUEUE_STATE.QUEUEING;
@@ -89,6 +91,7 @@ public class ADSampleQueue {
 
 			_sampleBlocks.add (frame);
 			_activeSampleBlocks.add (frame);
+			_writeableSampleBlocks.add (frame);
 	
 			_activeElapsedTime_ms += frameElapsed_ms;
 			_totalElapsedTime_ms += frameElapsed_ms;
@@ -157,6 +160,10 @@ public class ADSampleQueue {
 	
 	public synchronized QUEUE_STATE getQueueState() {
 		return _queueState;
+	}
+
+	public synchronized Queue<ADSampleFrame> getWriteableSampleBlocks() {
+		return _writeableSampleBlocks;
 	}
 	
 	

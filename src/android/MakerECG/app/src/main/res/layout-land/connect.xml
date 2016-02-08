@@ -70,7 +70,8 @@
                 android:layout_margin="25dip"
                 android:gravity="center"
                 android:text="@string/bluetooth"
-                android:layout_gravity="bottom" />
+                android:layout_gravity="bottom"
+                android:background="#263238" />
 
         </LinearLayout>
     </TableRow>

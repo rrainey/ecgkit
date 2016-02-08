@@ -36,19 +36,6 @@ public class BTConnection extends Connection {
 
 	public BTConnection(String address) {
 
-        /*
-		mAdapter = BluetoothAdapter.getDefaultAdapter();
-		BluetoothDevice device = mAdapter.getRemoteDevice(address);
-		try {
-			mSocket = device
-					.createInsecureRfcommSocketToServiceRecord(MY_UUID_INSECURE);
-			mSocket.connect();
-		} catch (IOException e) {
-			Log.e(ADK.TAG, "exception while attempting connection BT device " + address);
-			e.printStackTrace();
-		}
-		*/
-
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         BluetoothDevice device = mAdapter.getRemoteDevice(address);
 

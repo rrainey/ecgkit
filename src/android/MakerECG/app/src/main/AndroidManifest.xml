@@ -6,6 +6,8 @@
     <uses-sdk
         android:minSdkVersion="19"
         android:targetSdkVersion="19" />
+
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -39,14 +41,15 @@
         <activity
             android:name=".activity.ECGActivity"
             android:label="@string/title_activity_main" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".activity.BTDeviceListActivity"
             android:label="@string/bluetooth"/>
-        <activity
-            android:name=".activity.HomeActivity"
-            android:label="@string/app_short_name">
-        </activity>
 		<activity
         	android:name=".Preferences"
         	android:label="@string/set_preferences">

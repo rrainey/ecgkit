@@ -188,45 +188,45 @@ public class ECGRendererGL implements Renderer {
 			
 			GL11 gl = (GL11) gl10;
 			
-		/*
-		 * account for the passage of real time
-		 */
-		elapsedTimeUpdate();
+			/*
+			 * account for the passage of real time
+			 */
+			elapsedTimeUpdate();
 
-		gl.glPushMatrix();
+			gl.glPushMatrix();
 
-		gl.glEnable(GL11.GL_LINE_SMOOTH);
-		gl.glEnable(GL11.GL_BLEND);
-		gl.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		gl.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_DONT_CARE);
+			//gl.glEnable(GL11.GL_LINE_SMOOTH);
+			gl.glEnable(GL11.GL_BLEND);
+			gl.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			//gl.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_DONT_CARE);
 
-		gl.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+			gl.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
-		gl.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+			gl.glEnableClientState(GL11.GL_VERTEX_ARRAY);
 
-		/*
-		 * Major grid lines
-		 * 
-		 * See https://groups.google.com/forum/?fromgroups=#!topic/android-developers/qDPtw7i-ZtE
-		 */
-		//gl.glLineWidth(0.2f);
-		gl.glColor4f(0.0f, 0.0f, 1.0f, 0.25f);
-		gl.glVertexPointer(3, GL11.GL_SHORT, 0, _thinGridBuffer);
-		gl.glDrawArrays(GL11.GL_LINES, 0, _nPoints);
+			/*
+			 * Major grid lines
+			 *
+			 * See https://groups.google.com/forum/?fromgroups=#!topic/android-developers/qDPtw7i-ZtE
+			 */
+			gl.glLineWidth(5.0f);
+			gl.glColor4f(0.0f, 0.0f, 1.0f, 0.25f);
+			gl.glVertexPointer(3, GL11.GL_SHORT, 0, _thinGridBuffer);
+			gl.glDrawArrays(GL11.GL_LINES, 0, _nPoints);
 
-		/*
-		 * Minor grid lines
-		 */
-		//gl.glLineWidth(1.0f);
-		gl.glColor4f(0.0f, 0.0f, 1.0f, 0.80f);
-		gl.glVertexPointer(3, GL11.GL_SHORT, 0, _thickGridBuffer);
-		gl.glDrawArrays(GL11.GL_LINES, 0, _nThickPoints);
+			/*
+			 * Minor grid lines
+			 */
+			gl.glLineWidth(3.0f);
+			gl.glColor4f(0.0f, 0.0f, 1.0f, 0.80f);
+			gl.glVertexPointer(3, GL11.GL_SHORT, 0, _thickGridBuffer);
+			gl.glDrawArrays(GL11.GL_LINES, 0, _nThickPoints);
 
-		plotECGTrace( gl );
+			plotECGTrace( gl );
 
-		gl.glDisableClientState(GL11.GL_VERTEX_ARRAY);
+			gl.glDisableClientState(GL11.GL_VERTEX_ARRAY);
 
-		gl.glPopMatrix();
+			gl.glPopMatrix();
 		
 		}
 
@@ -269,7 +269,7 @@ public class ECGRendererGL implements Renderer {
 
 			if ( nCount > 1 ) {
 
-				gl.glLineWidthx(4);
+				gl.glLineWidth(5.0f);
 
 				gl.glColor4f( 0.0f, 1.0f, 0.0f, 1.0f );
 			    

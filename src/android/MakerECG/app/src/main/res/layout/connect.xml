@@ -53,7 +53,8 @@
         android:layout_height="80dip"
         android:layout_margin="25dip"
         android:gravity="center"
-        android:text="@string/bluetooth" />
+        android:text="@string/bluetooth"
+        android:background="#263238" />
 
     <View
         android:layout_width="match_parent"

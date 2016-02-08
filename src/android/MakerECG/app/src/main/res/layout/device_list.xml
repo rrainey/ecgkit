@@ -26,7 +26,7 @@
         android:background="#666"
         android:textColor="#fff"
         android:paddingLeft="5dp"
-    />
+        style="@android:style/TextAppearance.Large" />
     <ListView android:id="@+id/paired_devices"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -41,7 +41,7 @@
         android:background="#666"
         android:textColor="#fff"
         android:paddingLeft="5dp"
-    />
+        style="@android:style/TextAppearance.Large" />
     <ListView android:id="@+id/new_devices"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

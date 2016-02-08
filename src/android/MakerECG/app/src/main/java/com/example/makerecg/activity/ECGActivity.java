@@ -5,16 +5,22 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.UUID;
 
 //import com.android.future.usb.UsbAccessory;
 //import com.android.future.usb.UsbManager;
 
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbManager;
-import android.content.IntentFilter;
 import android.content.Intent;
 
 import com.example.makerecg.ADK;
+import com.example.makerecg.ADSampleDatabase;
 import com.example.makerecg.ADSampleFrame;
 import com.example.makerecg.ADSampleQueue;
 import com.example.makerecg.BTConnection;
@@ -24,16 +30,11 @@ import com.example.makerecg.R;
 import com.example.makerecg.UsbConnection;
 import com.example.makerecg.Utilities;
 import com.example.makerecg.ADSampleQueue.QUEUE_STATE;
-import com.example.makerecg.R.id;
-import com.example.makerecg.R.layout;
-import com.example.makerecg.R.string;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -45,9 +46,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ToggleButton;
 
@@ -58,9 +58,13 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 	private Handler mDeviceHandler;
 	private Handler mSettingsPollingHandler;
 
+	private UUID mDatasetUuid;
+    private String mDatasetDate;
+
 	private UsbManager mUSBManager;
 	private Connection mConnection;
 	private UsbAccessory mAccessory;
+	private ADSampleDatabase mDatabase;
 	
 	private static String curBtName = "<UNKNOWN>";
 	private static ECGActivity sHome = null;
@@ -139,6 +143,15 @@ public class ECGActivity extends Activity implements Callback, Runnable {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+		mDatasetUuid = UUID.randomUUID();
+        // take just year/month/day YYYY-MM-DD
+        mDatasetDate = getISO8601StringForCurrentDate().substring(0,9);
+
+		// Database service runs in a background thread to persist uploaded frames
+		mDatabase = new ADSampleDatabase(this);
+
+		mDatabase.startDatabaseWriterThread();
         
         setContentView(R.layout.main);
         
@@ -152,43 +165,50 @@ public class ECGActivity extends Activity implements Callback, Runnable {
         
         GLSurfaceView glSurfaceView =
                 (GLSurfaceView) findViewById(R.id.WaveformArea);
-       glSurfaceView.setRenderer(new ECGRendererGL(getBaseContext()));
-       glSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
+        glSurfaceView.setRenderer(new ECGRendererGL(getBaseContext()));
+        glSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
         
-       /*
-        * Start with scope controls disabled -- enable them once we're connected
-        */
-       ToggleButton toggle = (ToggleButton) findViewById(R.id.tbtn_runtoggle);
-       toggle.setEnabled(true);
-       toggle.setChecked(false);
-            
-       connectToAccessory();
-        
-       sHome = this;
+        /*
+         * Start with scope controls disabled -- enable them once we're connected
+         */
+        ToggleButton toggle = (ToggleButton) findViewById(R.id.tbtn_runtoggle);
+        toggle.setEnabled(true);
+        toggle.setChecked(false);
 
-       //startPollingSettings();
+        connectToAccessory();
         
-       startECGTelemetry();
-    }
-    /*
-    public void onCreate(Bundle savedInstanceState) {
-    	super.onCreate(savedInstanceState);
-    
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE); // (NEW)
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN); // (NEW)
+        sHome = this;
+
+        //startPollingSettings();
         
- 		GLSurfaceView view = new GLSurfaceView(this);
-   		view.setRenderer(new ECGRenderer());
-   		setContentView(view);
+        startECGTelemetry();
     }
-    */
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.activity_main, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.menu_save:
+                //newGame();
+                return true;
+            case R.id.menu_settings:
+                {
+                    Intent preferencesIntent = new Intent(this, com.example.makerecg.Preferences.class);
+                    startActivity(preferencesIntent);
+                }
+
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
     
     public void runToggle(View view) {
@@ -269,7 +289,6 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 								try {
 									b = curBtName.getBytes("UTF-8");
 								} catch (UnsupportedEncodingException e1) {
-									// well aren't you SOL....
 									e1.printStackTrace();
 								}
 								byte b2[] = new byte[b.length + 1];
@@ -308,26 +327,6 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 			performPostConnectionTasks();
 		} 
 		else {
-			// assume only one accessory (currently safe assumption)
-			//UsbAccessory[] accessories = mUSBManager.getAccessoryList();
-			//UsbAccessory accessory = (accessories == null) ? null : accessories[0];
-			/*
-			UsbAccessory accessory = (UsbAccessory) getIntent().getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
-			if (accessory != null) {
-				if (mUSBManager.hasPermission(accessory)) {
-					Log.d(ADK.TAG, "Had permission already in connectToAccessory()");
-					openAccessory( accessory );
-				} 
-				else {
-					// Request permission
-					PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(UsbConnection.ACTION_USB_PERMISSION), 0);
-					IntentFilter filter = new IntentFilter(UsbConnection.ACTION_USB_PERMISSION);
-					registerReceiver(((UsbConnection)mConnection).getReceiver(), filter);
-				}
-			} else {
-				Log.d(ADK.TAG, "connectToAccessory() Assertion error: mAccessory is null");
-			}
-			*/
 			// assume only one accessory (currently safe assumption)
 			UsbAccessory[] accessories = mUSBManager.getAccessoryList();
 			UsbAccessory accessory = (accessories == null) ? null : accessories[0];
@@ -408,7 +407,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 			b[0] = (byte) 0x01;
 		}
 		
-		b[1] = 0;				/* u16 - low byte */
+		b[1] = 0;			/* u16 - low byte */
 		b[2] = (byte) 0x80;	/* u16 - high byte */
 		
 		b[3] = 10;
@@ -419,7 +418,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		b[7] = 100;	/* u16 - low byte */
 		b[8] = 0;	/* u16 - high byte */
 		
-		sendCommand( CMD_X_TELEMETRY_STATE, CMD_X_TELEMETRY_STATE, b );
+		sendCommand(CMD_X_TELEMETRY_STATE, CMD_X_TELEMETRY_STATE, b);
 	}
 	
 	public void stopECGTelemetry() {
@@ -701,7 +700,8 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 			return true;
 		}
 	}
-	
+
+	/*
 	private void handleGetSensorsCommand(byte[] sensorBytes) {
 		if (gLogPackets)
 			Log.d(ADK.TAG,
@@ -760,12 +760,13 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 					.getDefaultSharedPreferences(this).edit();
 			int color = (proxNormalized[0] << 16) | (proxNormalized[1] << 8)
 					| proxNormalized[2];
-			/* TODO: disabled
-			editor.putInt(Preferences.PREF_COLOR_SENSOR, color);
-			*/
+			//TODO: disabled
+			//editor.putInt(Preferences.PREF_COLOR_SENSOR, color);
+			//
 			editor.commit();
 		}
 	}
+	*/
 
 	private void handleLockCommand(byte[] lockedBytes) {
 		if (gLogPackets)
@@ -845,7 +846,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		/*
 		 * Create a sample frame object and queue it for display
 		 */
-		f = new ADSampleFrame(b, c, nSampleCount, s);
+		f = new ADSampleFrame(mDatasetUuid, b, c, nSampleCount, s);
 		ADSampleQueue.getSingletonObject().addFrame( f );
 		
 	}
@@ -872,10 +873,10 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		case CMD_ALARM_FILE:
 			handleAlarmFileCommand((byte[]) msg.obj);
 			return true;
-		*/
 		case CMD_GET_SENSORS:
 			handleGetSensorsCommand((byte[]) msg.obj);
 			return true;
+		*/
 		case CMD_LOCK:
 			handleLockCommand((byte[]) msg.obj);
 			return true;
@@ -891,4 +892,27 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		}
 		return false;
 	}
+
+    /**
+     * Return an ISO 8601 combined date and time string for current date/time
+     *
+     * @return String with format "yyyy-MM-dd'T'HH:mm:ss'Z'"
+     */
+    public static String getISO8601StringForCurrentDate() {
+        Date now = new Date();
+        return getISO8601StringForDate(now);
+    }
+
+    /**
+     * Return an ISO 8601 combined date and time string for specified date/time
+     *
+     * @param date
+     *            Date
+     * @return String with format "yyyy-MM-dd'T'HH:mm:ss'Z'"
+     */
+    private static String getISO8601StringForDate(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+        //dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return dateFormat.format(date);
+    }
 }

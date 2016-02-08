@@ -18,6 +18,7 @@ package com.example.makerecg.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -29,6 +30,9 @@ public class ConnectActivity extends Activity implements OnClickListener {
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
 		setContentView(R.layout.connect);
 		mBluetoothButton = (Button) findViewById(R.id.connect_bluetooth_button);
 		mBluetoothButton.setOnClickListener(this);
