@@ -15,12 +15,16 @@
  */
 package com.example.makerecg;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 
 public class Utilities {
 	public static void centerAround(int x, int y, Drawable d) {
@@ -139,6 +143,41 @@ public class Utilities {
 		for (int i = 0; i < intArray.length; ++i) {
 			intArray[i] = byteArray[i] & 0xff;
 		}
+
 		return intArray;
 	}
+
+	public static String encodeBase64(short[] samples) {
+		byte [] s = new byte[(int)(samples.length*2)];
+		int j = 0;
+		for(int i=0; i<samples.length; ++i) {
+			s[j] = (byte)((samples[i] >> 8) & 0xff);
+			s[j+1] = (byte)(samples[i] & 0xff);
+			j+=2;
+		}
+		return Base64.encodeToString(s, 0);
+	}
+
+	/**
+     * Return an ISO 8601 combined date and time string for specified date/time
+     *
+     * @param date
+     *            Date
+     * @return String with format "yyyy-MM-dd'T'HH:mm:ss'Z'"
+     */
+    public static String getISO8601StringForDate(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+        //dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return dateFormat.format(date);
+    }
+
+	/**
+     * Return an ISO 8601 combined date and time string for current date/time
+     *
+     * @return String with format "yyyy-MM-dd'T'HH:mm:ss'Z'"
+     */
+    public static String getISO8601StringForCurrentDate() {
+        Date now = new Date();
+        return getISO8601StringForDate(now);
+    }
 }

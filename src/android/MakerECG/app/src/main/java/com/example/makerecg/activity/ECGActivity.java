@@ -5,11 +5,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 import java.util.UUID;
 
 //import com.android.future.usb.UsbAccessory;
@@ -20,11 +15,12 @@ import android.hardware.usb.UsbManager;
 import android.content.Intent;
 
 import com.example.makerecg.ADK;
-import com.example.makerecg.ADSampleDatabase;
+//import com.example.makerecg.ADSampleDatabase;
 import com.example.makerecg.ADSampleFrame;
 import com.example.makerecg.ADSampleQueue;
 import com.example.makerecg.BTConnection;
 import com.example.makerecg.Connection;
+import com.example.makerecg.ECGContentUtilities;
 import com.example.makerecg.ECGRendererGL;
 import com.example.makerecg.R;
 import com.example.makerecg.UsbConnection;
@@ -35,13 +31,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.Message;
 import android.opengl.GLSurfaceView;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -64,7 +58,8 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 	private UsbManager mUSBManager;
 	private Connection mConnection;
 	private UsbAccessory mAccessory;
-	private ADSampleDatabase mDatabase;
+	//private ADSampleDatabase mDatabase;
+	private ECGContentUtilities mContentUtilities;
 	
 	private static String curBtName = "<UNKNOWN>";
 	private static ECGActivity sHome = null;
@@ -146,13 +141,17 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 
 		mDatasetUuid = UUID.randomUUID();
         // take just year/month/day YYYY-MM-DD
-        mDatasetDate = getISO8601StringForCurrentDate().substring(0,9);
+        mDatasetDate = Utilities.getISO8601StringForCurrentDate().substring(0,9);
 
 		// Database service runs in a background thread to persist uploaded frames
-		mDatabase = new ADSampleDatabase(this);
+		//mDatabase = new ADSampleDatabase(this);
 
-		mDatabase.startDatabaseWriterThread();
-        
+		//mDatabase.startDatabaseWriterThread();
+
+		mContentUtilities = ECGContentUtilities.getInstance(this.getApplicationContext());
+
+		mContentUtilities.startDatabaseWriterThread();
+
         setContentView(R.layout.main);
         
 		mDeviceHandler = new Handler(this);
@@ -196,15 +195,12 @@ public class ECGActivity extends Activity implements Callback, Runnable {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.menu_save:
-                //newGame();
-                return true;
+				Intent backupIntent = new Intent(this, com.example.makerecg.activity.ImportExportDB.class);
+				startActivity(backupIntent);
+				return true;
             case R.id.menu_settings:
-                {
-                    Intent preferencesIntent = new Intent(this, com.example.makerecg.Preferences.class);
-                    startActivity(preferencesIntent);
-                }
-
-
+				Intent preferencesIntent = new Intent(this, com.example.makerecg.Preferences.class);
+				startActivity(preferencesIntent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -846,7 +842,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		/*
 		 * Create a sample frame object and queue it for display
 		 */
-		f = new ADSampleFrame(mDatasetUuid, b, c, nSampleCount, s);
+		f = new ADSampleFrame(mDatasetUuid, mDatasetDate, b, c, nSampleCount, s);
 		ADSampleQueue.getSingletonObject().addFrame( f );
 		
 	}
@@ -893,26 +889,4 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		return false;
 	}
 
-    /**
-     * Return an ISO 8601 combined date and time string for current date/time
-     *
-     * @return String with format "yyyy-MM-dd'T'HH:mm:ss'Z'"
-     */
-    public static String getISO8601StringForCurrentDate() {
-        Date now = new Date();
-        return getISO8601StringForDate(now);
-    }
-
-    /**
-     * Return an ISO 8601 combined date and time string for specified date/time
-     *
-     * @param date
-     *            Date
-     * @return String with format "yyyy-MM-dd'T'HH:mm:ss'Z'"
-     */
-    private static String getISO8601StringForDate(Date date) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
-        //dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return dateFormat.format(date);
-    }
 }

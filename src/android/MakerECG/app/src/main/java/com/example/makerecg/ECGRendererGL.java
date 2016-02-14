@@ -467,10 +467,11 @@ public class ECGRendererGL implements Renderer {
 	public float convertSampleToXCoordinate(ADSampleFrame b, short nCurSample, float fAvgSampleInterval_ms) {
 		return (float) ((b.getStartTimestamp() - _lPlotStartTimestamp_ms) + nCurSample * fAvgSampleInterval_ms);
 	}
-	
+
+	// Using the Olimex ECG board, I needed to reverse polarity to get the plot to look right
 	public float convertSampleToYCoordinate(short nSampleValue) {
 		// ADC sample arrives from the Arduino in the range 0..1023; scale to standard ECG plot grid
-		return (((float) nSampleValue / 1023.0f) * _fTotalScaling) + _fPlotYOrigin_div;
+		return ((- (float) nSampleValue / 1023.0f) * _fTotalScaling) + _fPlotYOrigin_div;
 	}
 	
 	public float convertSampleToZCoordinate(short nSample) {

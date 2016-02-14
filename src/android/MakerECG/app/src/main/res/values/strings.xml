@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2009 The Android Open Source Project
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright (C) 2009 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -34,7 +33,8 @@
     <string name="change_bt_name">Change Bluetooth Name</string>
     <string name="ch1_scale_default">1mV</string>
     <string name="ch2_scale_default">1mV</string>
-    <string name="connect_please">Your Arduino is not connected.</string><string name="title_connected_to">connected to: </string>
+    <string name="connect_please">Your Arduino is not connected.</string>
+    <string name="title_connected_to">connected to: </string>
     <string name="title_connecting">connecting&#8230;</string>
     <string name="title_not_connected">not connected</string>
     <string name="not_connected">You are not connected to a device</string>
@@ -59,5 +59,26 @@
     <string name="title_activity_main">Maker ECG</string>
     <string name="filter_a_on">Filter A</string>
     <string name="filter_b_on">Filter B</string>
+    <string name="title_activity_authenticator">Sign in</string>
 
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password (optional)</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="login_activity_username_label">Username</string>
+    <string name="login_activity_password_label">Password</string>
+    <string name="login_activity_ok_button">Continue</string>
+    <string name="ui_activity_authenticating">Connecting...</string>
+    <string name="login_activity_loginfail_text_both">Please enter a valid username and password"</string>
+    <string name="login_activity_loginfail_text_pwonly">Please enter a valid password</string>
+    <string name="login_activity_newaccount_text">You must supply a username</string>
+    <string name="login_activity_loginfail_text_pwmissing">You must supply a password</string>
 </resources>
