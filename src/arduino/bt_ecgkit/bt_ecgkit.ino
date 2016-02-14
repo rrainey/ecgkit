@@ -75,15 +75,6 @@ int g_nCurCollect;
 #define  LED_JC2    12   // flashes with each telemetry block write to Android
 #define  LED_JC3    11   // illuminated with first message (poll) received from Android
 
-/*
-AndroidAccessory acc("Web Simulations, Inc.",
-		     "ECGKit",
-		     "Mega ADK with ECG Shield",
-		     "2.0",
-		     "http://www.websimulations.com",
-		     "0000000012345678");
-*/
-
 void setup();
 void loop();
 
@@ -116,16 +107,15 @@ void setup()
     Serial.print(F("\r\nOSC did not start"));
     while (1); //halt
   }
-  //Serial.print(F("\r\nSPP Bluetooth Library Started"));
 
   init_leds();
-
-  //acc.powerOn();
 
   g_ulStartTime_ms = millis();
   g_usSampleCount = 0;
   g_nCollecting = 0;
   g_usPollRate = 0;
+
+  analogReference(EXTERNAL);
   
 #if FASTADC
   // set prescale to 16

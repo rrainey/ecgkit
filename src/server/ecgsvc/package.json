@@ -1,0 +1,27 @@
+{
+  "name": "ecgsvc",
+  "version": "0.1.0",
+  "description": "Simlple ECG Service",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "author": "Riley Rainey",
+  "license": "MIT",
+  "dependencies": {
+      "bcryptjs": "^0.7.12",
+      "body-parser": "^1.14.2", 
+      "express": "^3.5.0",
+      "express-handlebars": "^2.0.1",
+      "https": "1.0.0",
+      "node-oauth2-server": "^2.4.0",
+      "mongoose": "^4.4.3",
+      "https": "*",
+      "fs": "*"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*",
+    "request": "*"
+  }
+}
