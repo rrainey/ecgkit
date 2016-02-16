@@ -17,9 +17,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
  
 app.oauth = oauthserver({
-  model: require('./models/model'),
-  grants: ['password'],
-  debug: true
+    model: require('./models/model'),
+    grants: ['password'],
+    debug: true,
+    accessTokenLifetime: 3600*24*365,
 });
  
 app.all('/oauth/token', app.oauth.grant());

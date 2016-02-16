@@ -22,6 +22,9 @@ var tempRecords = [];
 var assert = require('assert');
 var auth_token;
 var app = express();
+var rooturl = 'https://' + config.testHost + ':9443/';
+var tokenurl = 'https://' + config.testHost + ':9443/oauth/token';
+var apiurl = 'https://' + config.testHost + ':9443/api/sampleframe';
 
 app.use(bodyParser.urlencoded({ extended: true }));
  
@@ -124,12 +127,15 @@ suite('Server Tests', function () {
     });
                
     after(function () {
-        //deleteFolderRecursive('./testca');
+        // remove test records
+        //SampleFrame.remove({ datasetId: "06b5c78c-9836-466a-86fd-1342ceec5d4b"}, function (err) {
+        //  if (err) return console.error("could not remove samples at teardown");
+        //});
     });
         
          it('malformed request (client_id-only) should return 400', function (done) {
             var options = {
-                url: 'https://DALM00543038A:9443/oauth/token',
+                url: tokenurl,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'
                 },
@@ -146,7 +152,7 @@ suite('Server Tests', function () {
          
          it('malformed request (user-pwd-only) should return 400', function (done) {
             var options = {
-                url: 'https://DALM00543038A:9443/oauth/token',
+                url: tokenurl,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'
                 },
@@ -163,7 +169,7 @@ suite('Server Tests', function () {
          
          it('malformed request (user-pwd-grant-only) should return 400', function (done) {
             var options = {
-                url: 'https://DALM00543038A:9443/oauth/token',
+                url: tokenurl,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'
                 },
@@ -180,7 +186,7 @@ suite('Server Tests', function () {
          
          it('invalid user should return 400', function (done) {
             var options = {
-                url: 'https://DALM00543038A:9443/oauth/token',
+                url: tokenurl,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'
                 },
@@ -218,7 +224,7 @@ suite('Server Tests', function () {
          
          it('missing a bearer token; expect 400', function (done) {
             var options = {
-                url: 'https://DALM00543038A:9443/',
+                url: rooturl,
                 headers: {
                 },
                 rejectUnauthorized: false, 
@@ -248,25 +254,45 @@ suite('Server Tests', function () {
               });
         });
         
-        it('add a sample frame', function (done) {
+        it('add one sample frame', function (done) {
             var options = {
-                url: 'https://DALM00543038A:9443/api/sampleframe',
+                url: apiurl,
                 headers: {
                   'Content-Type': 'application/json',
                   'Authorization': "Bearer " + auth_token
                 },
                 
                 body: "{ \"data\": [ {\n" +
-                  "\"id\": \"d62a0269-7aef-4458-9f99-363360c35be3.11111111\",\n" +
+                  "\"id\": \"06b5c78c-9836-466a-86fd-1342ceec5d4b.0\",\n" +
                   "\"date\": \"2015-01-01\",\n" +
-                  "\"datasetId\": \"d62a0269-7aef-4458-9f99-363360c35be3\",\n" +
-                  "\"timestamp\": 11111111,\n" +
-                  "\"endTimestamp\": 11111111,\n" +
+                  "\"datasetId\": \"06b5c78c-9836-466a-86fd-1342ceec5d4b\",\n" +
+                  "\"timestamp\": 0,\n" +
+                  "\"endTimestamp\": 23,\n" +
                   "\"sampleCount\": 20,\n" +
                   "\"samples\": \"MDEwMjAzMDQwNTA2MDcwODA5MTAxMTEyMTMxNDE1MTYxNzE4MTkyMA==\"\n" +
                 "} ] }",
                 
                 
+                rejectUnauthorized: false, 
+            };
+            request.post(options, function (err, res, body){
+                expect(err).to.equal(null);
+                //console.log("err " + err);
+                //console.log("res " + JSON.stringify(res, null, 2));
+                expect(res.statusCode).to.equal(200);
+                done();
+              });
+        });
+         
+         it('add multiple sample frames', function (done) {
+            var options = {
+                url: apiurl,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': "Bearer " + auth_token
+                },
+                
+                body: fs.readFileSync('./test/dataset.json'),
                 rejectUnauthorized: false, 
             };
             request.post(options, function (err, res, body){
