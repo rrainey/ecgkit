@@ -118,7 +118,7 @@ public class ADSampleFrame {
 				"  timestamp: " + getStartTimestamp() + ",\n" +
 				"  endTimestamp: " + getEndTimestamp() + ",\n" +
 				"  sampleCount: " + getSampleCount() + ",\n" +
-				"  samples: \"" + Utilities.encodeBase64(getSamples()) + "\",\n" +
+				"  samples: \"" + Utilities.encodeBase64(getSamples()) + "\"\n" +
 				"}\n";
 
 		return r;

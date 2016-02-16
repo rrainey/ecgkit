@@ -47,7 +47,7 @@ import android.widget.ToggleButton;
 
 public class ECGActivity extends Activity implements Callback, Runnable {
 	
-	private static final boolean gLogPackets = true;
+	private static final boolean gLogPackets = false;
 	
 	private Handler mDeviceHandler;
 	private Handler mSettingsPollingHandler;
@@ -141,7 +141,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 
 		mDatasetUuid = UUID.randomUUID();
         // take just year/month/day YYYY-MM-DD
-        mDatasetDate = Utilities.getISO8601StringForCurrentDate().substring(0,9);
+        mDatasetDate = Utilities.getISO8601StringForCurrentDate().substring(0,10);
 
 		// Database service runs in a background thread to persist uploaded frames
 		//mDatabase = new ADSampleDatabase(this);

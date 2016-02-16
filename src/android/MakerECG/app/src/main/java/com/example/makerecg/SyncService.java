@@ -27,6 +27,9 @@ public class SyncService extends Service {
                 sSyncAdapter = new SyncAdapter(getApplicationContext(), true);
             }
         }
+
+        //whatever else you have to to here...
+        //android.os.Debug.waitForDebugger();
     }
 
     @Override

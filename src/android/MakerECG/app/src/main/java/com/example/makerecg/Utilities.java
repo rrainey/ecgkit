@@ -155,7 +155,7 @@ public class Utilities {
 			s[j+1] = (byte)(samples[i] & 0xff);
 			j+=2;
 		}
-		return Base64.encodeToString(s, 0);
+		return Base64.encodeToString(s, Base64.NO_WRAP);
 	}
 
 	/**

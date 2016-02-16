@@ -1,5 +1,6 @@
 package com.example.makerecg;
 
+import android.accounts.Account;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -9,6 +10,17 @@ import android.os.IBinder;
  * when started.
  */
 public class MyOAuthAuthenticatorService extends Service {
+
+    static Account mActiveAccount = null;
+
+    public static Account getSyncAccount() {
+        return mActiveAccount;
+    }
+
+    public static void setSyncAccount(Account account) {
+        mActiveAccount = account;
+    }
+
     //...
     // Instance field that stores the authenticator object
     private MyOAuthAuthenticator mAuthenticator;

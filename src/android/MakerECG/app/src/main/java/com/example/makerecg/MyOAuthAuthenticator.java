@@ -80,6 +80,8 @@ public class MyOAuthAuthenticator extends AbstractAccountAuthenticator {
                 result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
                 result.putString(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
                 result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
+                // TODO: compute and save expiry epoch; android:customTokens=true
+                // see Android documentation for getAuthToken
                 return result;
             }
         }

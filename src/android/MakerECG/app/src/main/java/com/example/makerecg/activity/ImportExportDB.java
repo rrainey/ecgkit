@@ -77,10 +77,11 @@ public class ImportExportDB extends Activity {
             File data = Environment.getDataDirectory();
 
             if (sd.canWrite()) {
-                String  currentDBPath= "/data/data/" + "com.example.makerecg"
-                        + "/databases/" + "samples.db";
+                String  currentDBPath /*= "/data/data/" + "com.example.makerecg"
+                        + "/databases/" + "samples.db"*/;
+                currentDBPath = getBaseContext().getApplicationInfo().dataDir + "/databases/samples.db";
                 String backupDBPath  = "/Maker ECG/samples.db";
-                File currentDB = new File(data, currentDBPath);
+                File currentDB = new File("", currentDBPath);
                 File backupDB = new File(sd, backupDBPath);
 
                 FileChannel src = new FileInputStream(currentDB).getChannel();
@@ -88,7 +89,7 @@ public class ImportExportDB extends Activity {
                 dst.transferFrom(src, 0, src.size());
                 src.close();
                 dst.close();
-                Toast.makeText(getBaseContext(), backupDB.toString(),
+                Toast.makeText(getBaseContext(), "Saved to " + backupDB.toString(),
                         Toast.LENGTH_LONG).show();
 
             }

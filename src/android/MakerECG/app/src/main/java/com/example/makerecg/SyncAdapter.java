@@ -65,10 +65,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             final String authtoken = mAccountManager.blockingGetAuthToken(account,
                     Constants.AUTHTOKEN_TYPE, NOTIFY_AUTH_FAILURE);
 
-            ECGContentUtilities ecgu = ECGContentUtilities.getInstance(this.getContext());
+            ECGContentUtilities ecgu = ECGContentUtilities.getInstance(getContext());
 
-            // Upload up to 200 frames at a time
-            List<ADSampleFrame> dirtyFrames = ecgu.uploadPendingFrames(200);
+            // Upload up to 50 frames at a time
+            List<ADSampleFrame> dirtyFrames = ecgu.uploadPendingFrames(50);
 
             // Since we currently only are uploading frames, we can skip calling
             // the service where nothing needs to be uploaded.
@@ -80,6 +80,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         0,
                         dirtyFrames);
             }
+            Log.i(TAG, "uploaded " + dirtyFrames.size() + "frames");
+
+            ecgu.markAsUploaded(dirtyFrames);
 
             // We won't currently get any updated frames returned, so we are done.
 

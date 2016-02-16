@@ -26,6 +26,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.params.ConnManagerParams;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
@@ -67,19 +68,9 @@ final public class NetworkUtilities {
     /** The tag used to log to adb console. */
     private static final String TAG = "NetworkUtilities";
     /** POST parameter name for the user's account name */
-    public static final String PARAM_USERNAME = "username";
-    /** POST parameter name for the user's password */
-    public static final String PARAM_PASSWORD = "password";
-    /** POST parameter name for the user's authentication token */
-    public static final String PARAM_AUTH_TOKEN = "authtoken";
-    /** POST parameter name for the client's last-known sync state */
-    public static final String PARAM_SYNC_STATE = "syncstate";
-    /** POST parameter name for the sending client-edited contact info */
-    public static final String PARAM_CONTACTS_DATA = "contacts";
-    /** Timeout (in ms) we specify for each http request */
     public static final int HTTP_REQUEST_TIMEOUT_MS = 30 * 1000;
     /** Base URL for the v2 Sample Sync Service */
-    public static final String BASE_URL = "http://app1.websimulations.com";
+    public static final String BASE_URL = "https://app1.websimulations.com:9443";
     /** URI for authentication service */
     public static final String AUTH_URI = BASE_URL + "/oauth/token";
     /** URI for sync service */
@@ -118,6 +109,7 @@ final public class NetworkUtilities {
             URL urlToRequest = new URL(AUTH_URI);
             HttpURLConnection conn = (HttpURLConnection) urlToRequest.openConnection();
             conn.setDoOutput(true);
+            conn.setDoInput(true);
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
@@ -139,9 +131,9 @@ final public class NetworkUtilities {
             if (responseCode == HttpsURLConnection.HTTP_OK) {
                 String response = "";
                 String line;
-                BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                while ((line=br.readLine()) != null) {
-                    response+=line;
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                while ((line = br.readLine()) != null) {
+                    response += line;
                 }
 
                 // Response body will look something like this:
@@ -154,8 +146,7 @@ final public class NetworkUtilities {
                 JSONObject jresp = new JSONObject(new JSONTokener(response));
 
                 token = jresp.getString("access_token");
-            }
-            else {
+            } else {
                 Log.e(TAG, "Error authenticating");
                 token = null;
             }
@@ -168,47 +159,6 @@ final public class NetworkUtilities {
 
         return token;
 
-        /*
-        final HttpResponse resp;
-        final ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(PARAM_USERNAME, username));
-        params.add(new BasicNameValuePair(PARAM_PASSWORD, password));
-        final HttpEntity entity;
-        try {
-            entity = new UrlEncodedFormEntity(params);
-        } catch (final UnsupportedEncodingException e) {
-            // this should never happen.
-            throw new IllegalStateException(e);
-        }
-        Log.i(TAG, "Authenticating to: " + AUTH_URI);
-        final HttpPost post = new HttpPost(AUTH_URI);
-        post.addHeader(entity.getContentType());
-        post.setEntity(entity);
-        try {
-            resp = getHttpClient().execute(post);
-            String authToken = null;
-            if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                InputStream istream = (resp.getEntity() != null) ? resp.getEntity().getContent()
-                        : null;
-                if (istream != null) {
-                    BufferedReader ireader = new BufferedReader(new InputStreamReader(istream));
-                    authToken = ireader.readLine().trim();
-                }
-            }
-            if ((authToken != null) && (authToken.length() > 0)) {
-                Log.v(TAG, "Successful authentication");
-                return authToken;
-            } else {
-                Log.e(TAG, "Error authenticating" + resp.getStatusLine());
-                return null;
-            }
-        } catch (final IOException e) {
-            Log.e(TAG, "IOException when getting authtoken", e);
-            return null;
-        } finally {
-            Log.v(TAG, "getAuthtoken completing");
-        }
-        */
     }
 
     private static String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException
@@ -241,44 +191,60 @@ final public class NetworkUtilities {
      * @param authtoken The authtoken stored in the AccountManager for this
      *            account
      * @param serverSyncState A token returned from the server on the last sync
-     * @param dirtyContacts A list of the contacts to send to the server
-     * @return A list of contacts that we need to update locally
+     * @param dirtyFrames A list of the frames to send to the server
+     * @return A list of frames that we need to update locally
      */
     public static List<ADSampleFrame> syncSampleFrames(
-            Account account, String authtoken, long serverSyncState, List<ADSampleFrame> dirtyContacts)
+            Account account, String authtoken, long serverSyncState, List<ADSampleFrame> dirtyFrames)
             throws JSONException, ParseException, IOException, AuthenticationException {
 
         List<JSONObject> jsonFrames = new ArrayList<JSONObject>();
-        for (ADSampleFrame frame : dirtyContacts) {
+        for (ADSampleFrame frame : dirtyFrames) {
             jsonFrames.add(frame.toJSONObject());
         }
 
         JSONArray buffer = new JSONArray(jsonFrames);
+        JSONObject top = new JSONObject();
+
+        top.put("data", buffer);
 
         // Create an array that will hold the server-side ADSampleFrame
         // that have been changed (returned by the server).
         final ArrayList<ADSampleFrame> serverDirtyList = new ArrayList<ADSampleFrame>();
 
-        // Prepare our POST data
-        final ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-        //params.add(new BasicNameValuePair(PARAM_USERNAME, account.name));
-        //params.add(new BasicNameValuePair(PARAM_AUTH_TOKEN, authtoken));
-        //params.add(new BasicNameValuePair(PARAM_CONTACTS_DATA, buffer.toString()));
-        if (serverSyncState > 0) {
-            params.add(new BasicNameValuePair(PARAM_SYNC_STATE, Long.toString(serverSyncState)));
-        }
-        Log.i(TAG, params.toString());
-        HttpEntity entity = new UrlEncodedFormEntity(params);
-
         // Send the updated frames data to the server
         Log.i(TAG, "Syncing to: " + SYNC_URI);
+        URL urlToRequest = new URL(SYNC_URI);
+        HttpURLConnection conn = (HttpURLConnection) urlToRequest.openConnection();
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("Authorization", "Bearer " + authtoken);
+
+        OutputStream os = conn.getOutputStream();
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+        writer.write(top.toString(1));
+        writer.flush();
+        writer.close();
+        os.close();
+
+        Log.i(TAG, "body="+top.toString(1));
+
+        int responseCode = conn.getResponseCode();
+
+        /*
+
         final HttpPost post = new HttpPost(SYNC_URI);
-        post.addHeader(entity.getContentType());
+        post.addHeader("Content-Type", "application/json");
         post.addHeader("Authorization", "Bearer " + authtoken);
-        post.setEntity(entity);
+        post.setEntity(new ByteArrayEntity(top.toString().getBytes("UTF8")));
+
         final HttpResponse resp = getHttpClient().execute(post);
         final String response = EntityUtils.toString(resp.getEntity());
         if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+        */
+        if (responseCode == HttpsURLConnection.HTTP_OK) {
             // Our request to the server was successful - so we assume
             // that they accepted all the changes we sent up, and
             // that the response includes the contacts that we need
@@ -296,16 +262,16 @@ final public class NetworkUtilities {
             }
             */
         } else {
-            if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
+            if (responseCode == HttpsURLConnection.HTTP_UNAUTHORIZED) {
                 Log.e(TAG, "Authentication exception in while uploading data");
                 throw new AuthenticationException();
             } else {
-                Log.e(TAG, "Server error in sending sample frames: " + resp.getStatusLine());
+                Log.e(TAG, "Server error in sending sample frames: " + responseCode);
                 throw new IOException();
             }
         }
 
-        return serverDirtyList;
+        return null;
     }
 
 }

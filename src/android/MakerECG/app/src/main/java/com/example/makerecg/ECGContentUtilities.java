@@ -49,6 +49,8 @@ public class ECGContentUtilities {
             j+=2;
         }
 
+        initialValues.put(ECGContentProvider._ID,
+                frame.getDatasetUuid().toString() + frame.getStartTimestamp());
         initialValues.put(ECGContentProvider.COLUMN_SAMPLE_ID,
                 frame.getDatasetUuid().toString());
         initialValues.put(ECGContentProvider.COLUMN_SAMPLE_DATE,
@@ -78,12 +80,15 @@ public class ECGContentUtilities {
 
         Cursor c = mCtx.getContentResolver().query(
                 sampleFrames,
-                new String[]{ECGContentProvider.COLUMN_SAMPLE_ID,
+                new String[]{
+                        ECGContentProvider._ID,
+                        ECGContentProvider.COLUMN_SAMPLE_ID,
                         ECGContentProvider.COLUMN_SAMPLE_DATE,
                         ECGContentProvider.COLUMN_SAMPLE_COUNT,
                         ECGContentProvider.COLUMN_SAMPLES,
                         ECGContentProvider.COLUMN_START_TIME_MS,
-                        ECGContentProvider.COLUMN_END_TIME_MS},
+                        ECGContentProvider.COLUMN_END_TIME_MS
+                },
                 ECGContentProvider.COLUMN_UPLOADED_TS + " IS NULL",
                 null,
                 ECGContentProvider._ID);
@@ -91,12 +96,13 @@ public class ECGContentUtilities {
         if (c.moveToFirst()) {
             do{
                 ADSampleFrame frame = new ADSampleFrame(
-                        UUID.fromString(c.getString(0)),
-                        c.getString(1),
-                        c.getLong(4),
-                        c.getLong(5),
-                        c.getShort(2),
-                        blobToShortArray(c.getBlob(3), c.getShort(2)));
+                        UUID.fromString(c.getString(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_ID))),
+                        c.getString(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_DATE)),
+                        c.getLong(c.getColumnIndex(ECGContentProvider.COLUMN_START_TIME_MS)),
+                        c.getLong(c.getColumnIndex(ECGContentProvider.COLUMN_END_TIME_MS)),
+                        c.getShort(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_COUNT)),
+                        blobToShortArray(c.getBlob(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLES)),
+                                c.getShort(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_COUNT))));
 
                 // Send it
                 result.add(frame);
@@ -126,11 +132,11 @@ public class ECGContentUtilities {
 
             Uri sampleFrames = Uri.parse(URL);
 
-            mCtx.getContentResolver().update(sampleFrames, values,
-                    ECGContentProvider.COLUMN_SAMPLE_ID + " = ? and " +
+            mCtx.getContentResolver().update(sampleFrames, values, null, null);
+                   /* ECGContentProvider.COLUMN_SAMPLE_ID + " = ? and " +
                             ECGContentProvider.COLUMN_START_TIME_MS + " = ?",
                     new String[]{frame.getDatasetUuid().toString(),
-                            "" + frame.getStartTimestamp()});
+                            "" + frame.getStartTimestamp()}); */
         }
     }
 

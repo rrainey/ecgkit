@@ -29,6 +29,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.makerecg.ECGContentProvider;
+import com.example.makerecg.MyOAuthAuthenticatorService;
 import com.example.makerecg.R;
 import com.example.makerecg.NetworkUtilities;
 
@@ -206,6 +208,9 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         Log.i(TAG, "finishConfirmCredentials()");
         final Account account = new Account(mUsername, Constants.ACCOUNT_TYPE);
         mAccountManager.setPassword(account, mPassword);
+
+        MyOAuthAuthenticatorService.setSyncAccount(account);
+
         final Intent intent = new Intent();
         intent.putExtra(AccountManager.KEY_BOOLEAN_RESULT, result);
         setAccountAuthenticatorResult(intent.getExtras());
@@ -229,10 +234,13 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         if (mRequestNewAccount) {
             mAccountManager.addAccountExplicitly(account, mPassword, null);
             // Set contacts sync for this account.
-            ContentResolver.setSyncAutomatically(account, ContactsContract.AUTHORITY, true);
+            ContentResolver.setSyncAutomatically(account, ECGContentProvider.PROVIDER_NAME, true);
         } else {
             mAccountManager.setPassword(account, mPassword);
         }
+
+        MyOAuthAuthenticatorService.setSyncAccount(account);
+
         final Intent intent = new Intent();
         intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, mUsername);
         intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNT_TYPE);
