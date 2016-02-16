@@ -32,3 +32,11 @@ proguard/
 captures/
 
 .DS_Store
+
+# ssl certificates
+src/server/ecgkit/ssl/
+ssl/
+
+# node dependencies
+src/server/ecgkit/node_modules/
+node_modules/

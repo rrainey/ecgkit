@@ -143,13 +143,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
         // take just year/month/day YYYY-MM-DD
         mDatasetDate = Utilities.getISO8601StringForCurrentDate().substring(0,10);
 
-		// Database service runs in a background thread to persist uploaded frames
-		//mDatabase = new ADSampleDatabase(this);
-
-		//mDatabase.startDatabaseWriterThread();
-
 		mContentUtilities = ECGContentUtilities.getInstance(this.getApplicationContext());
-
 		mContentUtilities.startDatabaseWriterThread();
 
         setContentView(R.layout.main);

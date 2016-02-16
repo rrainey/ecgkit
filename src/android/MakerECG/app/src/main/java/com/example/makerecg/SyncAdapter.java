@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Handle the transfer of data between a server and an
- * app, using the Android sync adapter framework.
+ * Handle the transfer of data between a server and the
+ * app using the Android sync adapter framework.
  */
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
@@ -67,24 +67,44 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
             ECGContentUtilities ecgu = ECGContentUtilities.getInstance(getContext());
 
-            // Upload up to 50 frames at a time
-            List<ADSampleFrame> dirtyFrames = ecgu.uploadPendingFrames(50);
+            boolean framesToUpload = true;
+            int totalFramesUploadedThisSync = 0;
 
-            // Since we currently only are uploading frames, we can skip calling
-            // the service where nothing needs to be uploaded.
+            // Break our upload work into blocks of 50 frames at a time.
+            while (framesToUpload) {
 
-            if (dirtyFrames.size() > 0 ) {
-                updatedFrames = NetworkUtilities.syncSampleFrames(
-                        account,
-                        authtoken,
-                        0,
-                        dirtyFrames);
+                int framesThisPass = 0;
+
+                // Get up to 50 pending frames to upload
+                List<ADSampleFrame> dirtyFrames = ecgu.uploadPendingFrames(50);
+
+                framesThisPass = dirtyFrames.size();
+
+                // Since we currently only are uploading frames, we can skip calling
+                // the service where nothing needs to be uploaded.
+                if (framesThisPass > 0) {
+                    updatedFrames = NetworkUtilities.syncSampleFrames(
+                            account,
+                            authtoken,
+                            0,
+                            dirtyFrames);
+
+                    Log.i(TAG, "uploaded " + dirtyFrames.size() + " frames");
+
+                    ecgu.markAsUploaded(dirtyFrames);
+                }
+
+                totalFramesUploadedThisSync += framesThisPass;
+
+                syncResult.stats.numEntries += framesThisPass;
+
+                // we'll stop syncing when we either don't have any more pending records,
+                // or we get to 10,000 uploaded frames
+                if (framesThisPass == 0 || totalFramesUploadedThisSync >= 10000) {
+                    framesToUpload = false;
+                }
+
             }
-            Log.i(TAG, "uploaded " + dirtyFrames.size() + "frames");
-
-            ecgu.markAsUploaded(dirtyFrames);
-
-            // We won't currently get any updated frames returned, so we are done.
 
         } catch (final AuthenticatorException e) {
             Log.e(TAG, "AuthenticatorException", e);

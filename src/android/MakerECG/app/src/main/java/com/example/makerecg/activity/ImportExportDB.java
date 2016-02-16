@@ -21,7 +21,7 @@ public class ImportExportDB extends Activity {
         // TODO Auto-generated method stub
         super.onCreate(savedInstanceState);
 //creating a new folder for the database to be backuped to
-        File direct = new File(Environment.getExternalStorageDirectory() + "/Maker ECG");
+        File direct = new File(Environment.getExternalStorageDirectory() + "/MakerECG");
 
         if(!direct.exists())
         {
@@ -39,13 +39,14 @@ public class ImportExportDB extends Activity {
     private void importDB() {
 
         try {
-            File sd = Environment.getExternalStorageDirectory();
+            File sd = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS);
             File data  = Environment.getDataDirectory();
 
             if (sd.canWrite()) {
                 String  currentDBPath= "/data/data/" + "com.example.makerecg"
                         + "/databases/" + "samples.db";
-                String backupDBPath  = "/Maker ECG/samples.db";
+                String backupDBPath  = "/MakerECG/samples.db";
                 File  backupDB= new File(data, currentDBPath);
                 File currentDB  = new File(sd, backupDBPath);
 
@@ -73,14 +74,15 @@ public class ImportExportDB extends Activity {
     private void exportDB() {
 
         try {
-            File sd = Environment.getExternalStorageDirectory();
+            File sd = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS);
             File data = Environment.getDataDirectory();
 
             if (sd.canWrite()) {
                 String  currentDBPath /*= "/data/data/" + "com.example.makerecg"
                         + "/databases/" + "samples.db"*/;
                 currentDBPath = getBaseContext().getApplicationInfo().dataDir + "/databases/samples.db";
-                String backupDBPath  = "/Maker ECG/samples.db";
+                String backupDBPath  = "/samples.db";
                 File currentDB = new File("", currentDBPath);
                 File backupDB = new File(sd, backupDBPath);
 

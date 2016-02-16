@@ -135,6 +135,7 @@ final public class NetworkUtilities {
                 while ((line = br.readLine()) != null) {
                     response += line;
                 }
+                br.close();
 
                 // Response body will look something like this:
                 // {
@@ -213,7 +214,7 @@ final public class NetworkUtilities {
         final ArrayList<ADSampleFrame> serverDirtyList = new ArrayList<ADSampleFrame>();
 
         // Send the updated frames data to the server
-        Log.i(TAG, "Syncing to: " + SYNC_URI);
+        //Log.i(TAG, "Syncing to: " + SYNC_URI);
         URL urlToRequest = new URL(SYNC_URI);
         HttpURLConnection conn = (HttpURLConnection) urlToRequest.openConnection();
         conn.setDoOutput(true);
@@ -229,21 +230,10 @@ final public class NetworkUtilities {
         writer.close();
         os.close();
 
-        Log.i(TAG, "body="+top.toString(1));
+        //Log.i(TAG, "body="+top.toString(1));
 
         int responseCode = conn.getResponseCode();
 
-        /*
-
-        final HttpPost post = new HttpPost(SYNC_URI);
-        post.addHeader("Content-Type", "application/json");
-        post.addHeader("Authorization", "Bearer " + authtoken);
-        post.setEntity(new ByteArrayEntity(top.toString().getBytes("UTF8")));
-
-        final HttpResponse resp = getHttpClient().execute(post);
-        final String response = EntityUtils.toString(resp.getEntity());
-        if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-        */
         if (responseCode == HttpsURLConnection.HTTP_OK) {
             // Our request to the server was successful - so we assume
             // that they accepted all the changes we sent up, and
@@ -251,6 +241,16 @@ final public class NetworkUtilities {
             // to update on our side...
 
             // TODO: Only uploading data for now ...
+
+            String response = "";
+            String line;
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            while ((line = br.readLine()) != null) {
+                response += line;
+            }
+            br.close();
+
+            //Log.i(TAG, "response="+response);
             /*
             final JSONArray serverContacts = new JSONArray(response);
             Log.d(TAG, response);
