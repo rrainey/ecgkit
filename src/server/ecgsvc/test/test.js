@@ -40,8 +40,10 @@ app.all('/oauth/token', app.oauth.grant());
 
 app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
         var item;
-        var result = [];
-        req.body.data.forEach ( function(item) {
+        var keys = [];
+        var data = req.body.data;
+        for (var i = 0; i < data.length; i++) {
+            var item = data[i];   
             var samples = new Buffer(item.samples, "base64");
             var a = new SampleFrame({
                 id: item.id,
@@ -52,13 +54,14 @@ app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
                 sampleCount: item.sampleCount,
                 samples: samples
             });
-            a.save(function(err, a){
-                if(err) return res.status(500).send('Error occurred: database error.');
-                result.push({ id: a._id });
+            a.save( function(err, a) {
+                //console.log("a " + a);
+                if (err) return res.status(500).send('Error occurred: database error.');
             });
-        });
+            keys.push( { "_id": a._id } );
+        }
 
-        res.json(result);
+        res.json( { "keys": keys } );
     });
 
 app.get('/', app.oauth.authorise(), function (req, res) {
@@ -298,7 +301,7 @@ suite('Server Tests', function () {
             request.post(options, function (err, res, body){
                 expect(err).to.equal(null);
                 //console.log("err " + err);
-                //console.log("res " + JSON.stringify(res, null, 2));
+                console.log("res " + JSON.stringify(body, null, 2));
                 expect(res.statusCode).to.equal(200);
                 done();
               });
