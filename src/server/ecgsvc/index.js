@@ -103,8 +103,8 @@ app.get('/', app.oauth.authorise(), function (req, res) {
 app.use(app.oauth.errorHandler());
 
 var options = {
-    key: fs.readFileSync('./ssl/newkey.pem'),
-    cert: fs.readFileSync('./ssl/certificate.pem')
+    key: fs.readFileSync(config.sslKeyfile),
+    cert: fs.readFileSync(config.sslCertfile)
 };
 
 var server = https.createServer(options, app).listen(config.port, function(){

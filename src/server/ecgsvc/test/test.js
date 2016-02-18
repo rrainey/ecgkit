@@ -84,7 +84,13 @@ app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
                     SampleFrame.findOne( { "id": a.id }, function(err,f) {
                         if (f === null) {
                             a.save( function(err) {
-                                recordResponse = { "id": a.id, "_id": a._id };
+                                if (err) {
+                                    recordResponse = { "id": a.id, "status": "error" };
+                                    console.error("error on save of sample frame: " + err);
+                                }
+                                else {
+                                    recordResponse = { "id": a.id, "_id": a._id };
+                                }
                                 keys.push( recordResponse );
                                 callback();
                             });
@@ -383,6 +389,30 @@ suite('Server Tests', function () {
                 var x = JSON.parse(body);
                 expect(x.keys[0].status).to.equal('duplicate');
                 expect(x.keys[0].id).to.equal("06b5c78c-9836-466a-86fd-1342ceec5d4b.10021");
+                expect(res.statusCode).to.equal(200);
+                done();
+              });
+        });
+         
+         it('attempt to add single batched sample frame', function (done) {
+            var options = {
+                url: apiurl,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': "Bearer " + auth_token
+                },
+                
+                body: fs.readFileSync('./test/dataset2.json'),
+                rejectUnauthorized: false, 
+            };
+            request.post(options, function (err, res, body){
+                expect(err).to.equal(null);
+                //console.log("err " + err);
+                //console.log("res " + JSON.stringify(body, null, 2));
+                var x = JSON.parse(body);
+                expect(x.status).to.equal('ok');
+                expect(x.keys[0].status).to.equal(undefined);
+                expect(x.keys[0].id).to.equal("da38eb30-402b-4fe7-b3b5-79d6c99848cf.10685");
                 expect(res.statusCode).to.equal(200);
                 done();
               });

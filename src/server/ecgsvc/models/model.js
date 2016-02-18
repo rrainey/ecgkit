@@ -69,7 +69,7 @@ model.OAuthClientsModel = OAuthClientsModel;
 // oauth2-server callbacks
 //
 model.getAccessToken = function (bearerToken, callback) {
-  console.log('in getAccessToken (bearerToken: ' + bearerToken + ')');
+  //console.log('in getAccessToken (bearerToken: ' + bearerToken + ')');
 
   OAuthAccessTokensModel.findOne({ accessToken: bearerToken }, callback);
 };
@@ -121,7 +121,7 @@ model.saveAccessToken = function (token, clientId, expires, userId, callback) {
  */
 model.getUser = function (username, password, callback) {
   var result = false;
-  console.log('in getUser (username: ' + username +')');
+  //console.log('in getUser (username: ' + username +')');
 
   OAuthUsersModel.findOne({ username: username }, function(err, user) {
       if(err) return callback(err);
