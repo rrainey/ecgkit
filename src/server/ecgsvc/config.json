@@ -1,0 +1,26 @@
+{
+    "dev": {
+        "mongoConnection": "mongodb://localhost:27017/site",
+        "port": 9443,
+        "testHost": "DALM00543038A",
+        "saltSync": 10,
+        "sslKeyfile": "./ssl/newkey.pem",
+        "sslCertfile": "./ssl/DALM00543038A.cert.pem"
+    },
+    "test": {
+        "mongoConnection": "mongodb://localhost:27017/site",
+        "port": 9443,
+        "testHost": "DALM00543038A",
+        "saltSync": 10,
+        "sslKeyfile": "./ssl/newkey.pem",
+        "sslCertfile": "./ssl/DALM00543038A.cert.pem"
+    },
+    "production": {
+        "mongoConnection": "mongodb://localhost:27017/site",
+        "port": 9443,
+        "testHost": "app1.websimulations.com",
+        "saltSync": 10,
+        "sslKeyfile": "./ssl/app1.websimulations.com.key.pem",
+        "sslCertfile": "./ssl/app1.websimulations.com.cert.pem"
+    }
+}

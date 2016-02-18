@@ -2,11 +2,12 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     https = require('https'),
     oauthserver = require('node-oauth2-server'),
-    config = require('./config'),
+    config = require('./config.json')[process.env.NODE_ENV || 'dev'],
     ecgapi = require('./ecgapi'),
     SampleFrame = require('./models/SampleFrame'),
     fs = require('fs'),
-    mongoose = require('mongoose');
+    mongoose = require('mongoose'),
+    nasync = require('async');
 
 mongoose.connect(config.mongoConnection);
  
@@ -26,29 +27,72 @@ app.oauth = oauthserver({
 app.all('/oauth/token', app.oauth.grant());
 
 app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
-        var item;
         var keys = [];
         var data = req.body.data;
-        for (var i = 0; i < data.length; i++) {
-            var item = data[i];   
-            var samples = new Buffer(item.samples, "base64");
-            var a = new SampleFrame({
-                id: item.id,
-                datasetId: item.datasetId,
-                date: item.date,
-                timestamp: item.timestamp,
-                endTimestamp: item.endTimestamp,
-                sampleCount: item.sampleCount,
-                samples: samples
-            });
-            a.save( function(err, a) {
-                //console.log("a " + a);
-                if (err) return res.status(500).send('Error occurred: database error.');
-            });
-            keys.push( { "_id": a._id } );
+        var toBeSaved = [];
+        var calls = [];
+        // 'data' array present?
+        if ( typeof data === 'undefined' || data === null ) {
+            res.json( { "keys": keys, "status": "missing data array in request" } );
+            return;
         }
-
-        res.json( { "keys": keys } );
+        nasync.each(data, function(item, callback) {
+            var recordResponse = {};
+            // all fields present?
+            if (typeof item.id === 'string') {
+                
+                if (typeof item.datasetId === 'string' &&
+                     typeof item.date === 'string' &&
+                     typeof item.timestamp === 'number' &&
+                     typeof item.sampleCount === 'number' &&
+                     typeof item.samples === 'string') {
+                    
+                    var samples = new Buffer(item.samples, "base64");
+                    
+                    var a = new SampleFrame(
+                        {
+                            id: item.id,
+                            datasetId: item.datasetId,
+                            date: item.date,
+                            timestamp: item.timestamp,
+                            endTimestamp: item.endTimestamp,
+                            sampleCount: item.sampleCount,
+                            samples: samples
+                        });
+                    
+                    SampleFrame.findOne( { "id": a.id }, function(err,f) {
+                        if (f === null) {
+                            a.save( function(err) {
+                                recordResponse = { "id": a.id, "_id": a._id };
+                                keys.push( recordResponse );
+                                callback();
+                            });
+                        }
+                        else {
+                            recordResponse = { "id": a.id, "status": "duplicate" };
+                            keys.push( recordResponse );   
+                            callback();
+                        }
+                    });
+                }
+                else {
+                    recordResponse = { "id": item.id, "status": "missing properties" };
+                    keys.push( recordResponse );
+                    callback();
+                }
+            }
+            else {
+                recordResponse = { "id": "", "status": "missing properties" };
+                keys.push( recordResponse );
+                callback();
+            }
+        },
+        function(err) {
+            // All tasks are done now
+            res.json( { "keys": keys, "status": "ok" } );
+        });
+            
+        
     });
 
 

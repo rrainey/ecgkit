@@ -3,7 +3,8 @@
 var expect = require('chai').expect,
     request = require('request');
 
-var config = require('../config'),
+var
+    service = require('../service'),
     bodyParser = require('body-parser'),
     model = require('../models/model'),
     fs = require('fs'),
@@ -12,7 +13,14 @@ var config = require('../config'),
     oauthserver = require('node-oauth2-server'),
     SampleFrame = require('../models/SampleFrame'),
     express = require('express'),
-    bcrypt = require('bcryptjs');
+    bcrypt = require('bcryptjs'),
+    nasync = require('async');
+
+var config = JSON.parse(fs.readFileSync('./config.json'))[process.env.NODE_ENV || 'dev'];
+
+console.log(process.env.NODE_ENV);
+
+console.log(JSON.stringify(config));
 
 mongoose.connect(config.mongoConnection);
 
@@ -38,31 +46,77 @@ app.oauth = oauthserver({
  
 app.all('/oauth/token', app.oauth.grant());
 
+
 app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
-        var item;
         var keys = [];
         var data = req.body.data;
-        for (var i = 0; i < data.length; i++) {
-            var item = data[i];   
-            var samples = new Buffer(item.samples, "base64");
-            var a = new SampleFrame({
-                id: item.id,
-                datasetId: item.datasetId,
-                date: item.date,
-                timestamp: item.timestamp,
-                endTimestamp: item.endTimestamp,
-                sampleCount: item.sampleCount,
-                samples: samples
-            });
-            a.save( function(err, a) {
-                //console.log("a " + a);
-                if (err) return res.status(500).send('Error occurred: database error.');
-            });
-            keys.push( { "_id": a._id } );
+        var toBeSaved = [];
+        var calls = [];
+        // 'data' array present?
+        if ( typeof data === 'undefined' || data === null ) {
+            res.json( { "keys": keys, "status": "missing data array in request" } );
+            return;
         }
-
-        res.json( { "keys": keys } );
+        nasync.each(data, function(item, callback) {
+            var recordResponse = {};
+            // all fields present?
+            if (typeof item.id === 'string') {
+                
+                if (typeof item.datasetId === 'string' &&
+                     typeof item.date === 'string' &&
+                     typeof item.timestamp === 'number' &&
+                     typeof item.sampleCount === 'number' &&
+                     typeof item.samples === 'string') {
+                    
+                    var samples = new Buffer(item.samples, "base64");
+                    
+                    var a = new SampleFrame(
+                        {
+                            id: item.id,
+                            datasetId: item.datasetId,
+                            date: item.date,
+                            timestamp: item.timestamp,
+                            endTimestamp: item.endTimestamp,
+                            sampleCount: item.sampleCount,
+                            samples: samples
+                        });
+                    
+                    SampleFrame.findOne( { "id": a.id }, function(err,f) {
+                        if (f === null) {
+                            a.save( function(err) {
+                                recordResponse = { "id": a.id, "_id": a._id };
+                                keys.push( recordResponse );
+                                callback();
+                            });
+                        }
+                        else {
+                            recordResponse = { "id": a.id, "status": "duplicate" };
+                            keys.push( recordResponse );   
+                            callback();
+                        }
+                    });
+                }
+                else {
+                    recordResponse = { "id": item.id, "status": "missing properties" };
+                    keys.push( recordResponse );
+                    callback();
+                }
+            }
+            else {
+                recordResponse = { "id": "", "status": "missing properties" };
+                keys.push( recordResponse );
+                callback();
+            }
+        },
+        function(err) {
+            // All tasks are done now
+            res.json( { "keys": keys, "status": "ok" } );
+        });
+            
+        
     });
+
+
 
 app.get('/', app.oauth.authorise(), function (req, res) {
     res.send('Secret area');
@@ -91,50 +145,50 @@ suite('Server Tests', function () {
          before(function () {
     
         
-        model.OAuthUsersModel.findOne({ username: 'bsmith' }, function(err, user) {
-            if (user === null) { 
-                console.log("user not present"); 
-                var user = new model.OAuthUsersModel({
-                    username: "bsmith",
-                    password: bcrypt.hashSync('zxcv', salt),
-                    firstname: 'Bill',
-                    lastname: 'Smith',
-                    email: 'bsmith@nowhere.com'
-                    });
-                user.save( function(err) { if (err) console.log("Error saving user: " + err) });
-                               
-            }
-        });
+            model.OAuthUsersModel.findOne({ username: 'bsmith' }, function(err, user) {
+                if (user === null) { 
+                    console.log("user not present"); 
+                    var user = new model.OAuthUsersModel({
+                        username: "bsmith",
+                        password: bcrypt.hashSync('zxcv', salt),
+                        firstname: 'Bill',
+                        lastname: 'Smith',
+                        email: 'bsmith@nowhere.com'
+                        });
+                    user.save( function(err) { if (err) console.log("Error saving user: " + err) });
 
-        
-        model.OAuthClientsModel.findOne({ clientId: "CLIENT_ID" }, function(err, client) {
-            if (client === null) { 
-                console.log("client_id already present");             
-                var client = new model.OAuthClientsModel({
-                    clientId: "CLIENT_ID",
-                    clientSecret: null,
-                    redirectUri: '/'
-                    });
-                client.save( function(err) { if (err) console.log("Error saving client: " + err) } ) }
-        });
-        
-        var options = {
-            key: fs.readFileSync('./ssl/newkey.pem'),
-            cert: fs.readFileSync('./ssl/certificate.pem')
-        };
+                }
+            });
 
-        var server = https.createServer(options, app).listen(config.port, function(){
-          console.log("Express server listening on port " + config.port);
-        });
 
-    });
+            model.OAuthClientsModel.findOne({ clientId: "CLIENT_ID" }, function(err, client) {
+                if (client === null) { 
+                    console.log("client_id already present");             
+                    var client = new model.OAuthClientsModel({
+                        clientId: "CLIENT_ID",
+                        clientSecret: null,
+                        redirectUri: '/'
+                        });
+                    client.save( function(err) { if (err) console.log("Error saving client: " + err) } ) }
+            });
+
+            var options = {
+                key: fs.readFileSync(config.sslKeyfile),
+                cert: fs.readFileSync(config.sslCertfile)
+            };
+
+            var server = https.createServer(options, app).listen(config.port, function(){
+              console.log("Express server listening on port " + config.port);
+            });
+
+        });
                
-    after(function () {
-        // remove test records
-        //SampleFrame.remove({ datasetId: "06b5c78c-9836-466a-86fd-1342ceec5d4b"}, function (err) {
-        //  if (err) return console.error("could not remove samples at teardown");
-        //});
-    });
+        after(function () {
+            // remove test records
+            //SampleFrame.find({ datasetId: "06b5c78c-9836-466a-86fd-1342ceec5d4b"}).remove(function (err) {
+            //  if (err) return console.error("could not remove samples at teardown");
+            //});
+        });
         
          it('malformed request (client_id-only) should return 400', function (done) {
             var options = {
@@ -301,7 +355,34 @@ suite('Server Tests', function () {
             request.post(options, function (err, res, body){
                 expect(err).to.equal(null);
                 //console.log("err " + err);
-                console.log("res " + JSON.stringify(body, null, 2));
+                //console.log("res " + body);
+                var x = JSON.parse(body);
+                expect(x.status).to.equal('ok');
+                expect(x.keys[0].status).to.equal(undefined);
+                expect(x.keys[0].id).to.equal("06b5c78c-9836-466a-86fd-1342ceec5d4b.10021");
+                expect(res.statusCode).to.equal(200);
+                done();
+              });
+        });
+         
+         it('attempt to add duplicate sample frames', function (done) {
+            var options = {
+                url: apiurl,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': "Bearer " + auth_token
+                },
+                
+                body: fs.readFileSync('./test/dataset.json'),
+                rejectUnauthorized: false, 
+            };
+            request.post(options, function (err, res, body){
+                expect(err).to.equal(null);
+                //console.log("err " + err);
+                //console.log("res " + JSON.stringify(body, null, 2));
+                var x = JSON.parse(body);
+                expect(x.keys[0].status).to.equal('duplicate');
+                expect(x.keys[0].id).to.equal("06b5c78c-9836-466a-86fd-1342ceec5d4b.10021");
                 expect(res.statusCode).to.equal(200);
                 done();
               });
