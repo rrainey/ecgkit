@@ -76,7 +76,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 int framesThisPass = 0;
 
                 // Get up to 50 pending frames to upload
-                List<ADSampleFrame> dirtyFrames = ecgu.uploadPendingFrames(50);
+                List<ADSampleFrame> dirtyFrames = ecgu.getNextUploadBatch(50);
 
                 framesThisPass = dirtyFrames.size();
 

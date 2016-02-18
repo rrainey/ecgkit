@@ -30,9 +30,8 @@ public class BTConnection extends Connection {
 
 	private final BluetoothAdapter mAdapter;
 	private BluetoothSocket mSocket;
-
-	private static final UUID MY_UUID_INSECURE = UUID
-			.fromString("1dd35050-a437-11e1-b3dd-0800200c9a66");
+    // UUID of BT SPP Serial
+	private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 
 	public BTConnection(String address) {
 
@@ -40,8 +39,10 @@ public class BTConnection extends Connection {
         BluetoothDevice device = mAdapter.getRemoteDevice(address);
 
         try {
-            mSocket = device.createRfcommSocketToServiceRecord(MY_UUID_INSECURE);
-        } catch (Exception e) {Log.e("","Error creating socket");}
+            mSocket = device.createRfcommSocketToServiceRecord(SPP_UUID);
+        } catch (Exception e) {
+            Log.e("","Error creating socket on createRfcommSocketToServiceRecord");
+        }
 
         try {
             mSocket.connect();

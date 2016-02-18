@@ -15,7 +15,6 @@ import android.hardware.usb.UsbManager;
 import android.content.Intent;
 
 import com.example.makerecg.ADK;
-//import com.example.makerecg.ADSampleDatabase;
 import com.example.makerecg.ADSampleFrame;
 import com.example.makerecg.ADSampleQueue;
 import com.example.makerecg.BTConnection;
@@ -58,7 +57,6 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 	private UsbManager mUSBManager;
 	private Connection mConnection;
 	private UsbAccessory mAccessory;
-	//private ADSampleDatabase mDatabase;
 	private ECGContentUtilities mContentUtilities;
 	
 	private static String curBtName = "<UNKNOWN>";

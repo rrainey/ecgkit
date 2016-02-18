@@ -106,7 +106,7 @@ public class ADSampleQueue {
 			bSavedFrame = true;
 		}
 		
-		//Log.d(ADK.TAG, "addFrame(" + frame +") returns " + bSavedFrame);
+		//Log.d(ADK.TAG, "insertFrame(" + frame +") returns " + bSavedFrame);
 		return bSavedFrame;
 	}
 	

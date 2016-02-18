@@ -36,10 +36,6 @@ public class ECGContentProvider extends ContentProvider {
     static final String URL = "content://" + PROVIDER_NAME + "/sampleframes";
     static final Uri CONTENT_URI = Uri.parse(URL);
 
-    //static final String _ID = "_id";
-    //static final String NAME = "name";
-    //static final String GRADE = "grade";
-
     static final String SAMPLES_TABLE = "samples";
     static final String _ID = "_ID";
     static final String COLUMN_SAMPLE_ID = "SAMPLE_ID";
@@ -50,7 +46,7 @@ public class ECGContentProvider extends ContentProvider {
     static final String COLUMN_END_TIME_MS = "END_TIME_MS";
     static final String COLUMN_UPLOADED_TS = "UPLOADED_TS";
 
-    private static HashMap<String, String> SAMPLE_FRAMES_PROJECTION_MAP;
+    //private static HashMap<String, String> SAMPLE_FRAMES_PROJECTION_MAP;
 
     static final int SAMPLE_FRAMES = 1;
     static final int SAMPLE_FRAME_ID = 2;
@@ -156,7 +152,7 @@ public class ECGContentProvider extends ContentProvider {
 
         switch (uriMatcher.match(uri)) {
             case SAMPLE_FRAMES:
-                qb.setProjectionMap(SAMPLE_FRAMES_PROJECTION_MAP);
+                //qb.setProjectionMap(SAMPLE_FRAMES_PROJECTION_MAP);
                 break;
 
             case SAMPLE_FRAME_ID:

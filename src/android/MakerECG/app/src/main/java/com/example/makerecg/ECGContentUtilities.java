@@ -37,7 +37,7 @@ public class ECGContentUtilities {
      *
      * @return rowId or -1 if failed
      */
-    public Uri addFrame(ADSampleFrame frame) {
+    public Uri insertFrame(ADSampleFrame frame) {
         ContentValues initialValues = new ContentValues();
         short [] samples = frame.getSamples();
         byte [] s = new byte[(int)(frame.getSampleCount()*2)];
@@ -50,7 +50,7 @@ public class ECGContentUtilities {
         }
 
         initialValues.put(ECGContentProvider._ID,
-                frame.getDatasetUuid().toString() + frame.getStartTimestamp());
+                frame.getPrimaryKey());
         initialValues.put(ECGContentProvider.COLUMN_SAMPLE_ID,
                 frame.getDatasetUuid().toString());
         initialValues.put(ECGContentProvider.COLUMN_SAMPLE_DATE,
@@ -72,7 +72,7 @@ public class ECGContentUtilities {
     /**
      * Gather a list of any records that might be waiting for upload.
      */
-    public List<ADSampleFrame> uploadPendingFrames(int maxSyncSize) {
+    public List<ADSampleFrame> getNextUploadBatch(int maxSyncSize) {
 
         List<ADSampleFrame> result = new LinkedList<ADSampleFrame>();
         int count = 0;
@@ -96,15 +96,14 @@ public class ECGContentUtilities {
         if (c.moveToFirst()) {
             do{
                 ADSampleFrame frame = new ADSampleFrame(
-                        UUID.fromString(c.getString(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_ID))),
-                        c.getString(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_DATE)),
-                        c.getLong(c.getColumnIndex(ECGContentProvider.COLUMN_START_TIME_MS)),
-                        c.getLong(c.getColumnIndex(ECGContentProvider.COLUMN_END_TIME_MS)),
-                        c.getShort(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_COUNT)),
-                        blobToShortArray(c.getBlob(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLES)),
-                                c.getShort(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_COUNT))));
+                    UUID.fromString(c.getString(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_ID))),
+                    c.getString(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_DATE)),
+                    c.getLong(c.getColumnIndex(ECGContentProvider.COLUMN_START_TIME_MS)),
+                    c.getLong(c.getColumnIndex(ECGContentProvider.COLUMN_END_TIME_MS)),
+                    c.getShort(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_COUNT)),
+                    blobToShortArray(c.getBlob(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLES)),
+                            c.getShort(c.getColumnIndex(ECGContentProvider.COLUMN_SAMPLE_COUNT))));
 
-                // Send it
                 result.add(frame);
 
                 ++ count;
@@ -119,24 +118,17 @@ public class ECGContentUtilities {
 
     public void markAsUploaded(List<ADSampleFrame> frames) {
         String URL = null;
-        int count = 0;
         ContentValues values = new ContentValues();
         values.put(ECGContentProvider.COLUMN_UPLOADED_TS,
                 Utilities.getISO8601StringForDate(new Date()));
 
         for (ADSampleFrame frame: frames) {
 
-            URL = ECGContentProvider.URL + "/" +
-                    frame.getDatasetUuid().toString() + "." +
-                    frame.getStartTimestamp();
+            URL = ECGContentProvider.URL + "/" + frame.getPrimaryKey();
 
-            Uri sampleFrames = Uri.parse(URL);
+            Uri frameId = Uri.parse(URL);
 
-            mCtx.getContentResolver().update(sampleFrames, values, null, null);
-                   /* ECGContentProvider.COLUMN_SAMPLE_ID + " = ? and " +
-                            ECGContentProvider.COLUMN_START_TIME_MS + " = ?",
-                    new String[]{frame.getDatasetUuid().toString(),
-                            "" + frame.getStartTimestamp()}); */
+            mCtx.getContentResolver().update(frameId, values, null, null);
         }
     }
 
@@ -153,35 +145,72 @@ public class ECGContentUtilities {
     public void startDatabaseWriterThread() {
         new Thread(new Runnable() {
             public void run() {
-                try {
-                    while (true) {
-                        writeSampleBlocks();
-                        Thread.sleep(1000);
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
-                    // no action
+            try {
+                while (true) {
+                    writeSampleBlocks();
+                    Thread.sleep(1000);
                 }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                // no action
+            }
             }
         }).start();
     }
 
     /*
-     * Save all pending sample blocks to the database
+     * Save pending sample blocks to the database
      */
     private void writeSampleBlocks() throws IOException {
 
         ADSampleQueue queue = ADSampleQueue.getSingletonObject();
-        Iterator<ADSampleFrame> it = queue.getWriteableSampleBlocks().iterator();
         ADSampleFrame frame;
+        int groupSize = 50;
+        int sampleCount = 10;
+        int groupSampleCount = groupSize*sampleCount;
+        short [] groupBuffer = new short[groupSampleCount];
 
-        while(it.hasNext()) {
-            frame = it.next();
-            addFrame(frame);
-            frame.setDirty(false);
-            it.remove();
+        // Bundle ADSampleFrames into groups of 50
+        // TODO: this code waits for a block of 50 samples to be available; we should
+        //  make provisions to flush an incomplete batch any time sampling stops.
+        while (queue.getWriteableSampleBlocks().size() >= groupSize) {
+
+            Iterator<ADSampleFrame> it = queue.getWriteableSampleBlocks().iterator();
+            UUID uuid = new UUID(0,0);
+            String date = "";
+            long timestamp = 0;
+            boolean bFirst = true;
+            boolean bDone = false;
+            int bufferOffset = 0;
+            int i = 0;
+
+            while (it.hasNext() && !bDone) {
+                frame = it.next();
+                if (bFirst) {
+                    uuid = frame.getDatasetUuid();
+                    date = frame.getDatasetDate();
+                    timestamp = frame.getStartTimestamp();
+                    bFirst = false;
+                }
+                for (int j=0; j<sampleCount; ++j ) {
+                    groupBuffer[bufferOffset+j] = frame.getSamples()[j];
+                }
+                bufferOffset += sampleCount;
+                if (++i >= groupSize) {
+                    ADSampleFrame groupFrame = new ADSampleFrame(
+                        uuid,
+                        date,
+                        timestamp,
+                        frame.getEndTimestamp(),
+                        groupSampleCount,
+                        groupBuffer);
+                    insertFrame(groupFrame);
+                    bDone = true;
+                }
+                frame.setDirty(false);
+                it.remove();
+            }
         }
     }
-
 }

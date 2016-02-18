@@ -62,6 +62,10 @@ public class ADSampleFrame {
         _dirty = true;
 	}
 
+	public String getPrimaryKey() {
+		return getDatasetUuid().toString() + "." + getStartTimestamp();
+	}
+
     public UUID getDatasetUuid() {
         return _datasetUuid;
     }

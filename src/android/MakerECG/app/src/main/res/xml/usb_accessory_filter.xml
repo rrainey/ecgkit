@@ -3,7 +3,7 @@
 
     <usb-accessory
         manufacturer="Web Simulations, Inc."
-        model="ECGKit"
+        model="Arduino"
         version="2.0" />
 
 </resources>
