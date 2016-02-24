@@ -7,8 +7,11 @@ var sampleFrameSchema = mongoose.Schema({
     timestamp: Number,
     endTimestamp: Number,
     sampleCount: Number,
-    samples: Buffer
+    samples: Buffer,
+    user: mongoose.Schema.Types.ObjectId,
+    created: { type: Date, default: Date.now }
 });
 var SampleFrame = mongoose.model('SampleFrame', sampleFrameSchema);
+
 module.exports = SampleFrame;
 

@@ -1,7 +1,7 @@
 var express = require('express'),
     bodyParser = require('body-parser'),
     https = require('https'),
-    oauthserver = require('node-oauth2-server'),
+    oauthserver = require('oauth2-server'),
     config = require('./config.json')[process.env.NODE_ENV || 'dev'],
     ecgapi = require('./ecgapi'),
     SampleFrame = require('./models/SampleFrame'),
@@ -12,6 +12,8 @@ var express = require('express'),
 mongoose.connect(config.mongoConnection);
  
 var app = express();
+
+app.disable('x-powered-by');
 
 app.use(bodyParser.urlencoded({ extended: true }));
  
@@ -31,6 +33,7 @@ app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
     var data = req.body.data;
     var toBeSaved = [];
     var calls = [];
+    
     // 'data' array present?
     if ( typeof data === 'undefined' || data === null ) {
         res.json( { "keys": keys, "status": "missing data array in request" } );
@@ -57,7 +60,8 @@ app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
                         timestamp: item.timestamp,
                         endTimestamp: item.endTimestamp,
                         sampleCount: item.sampleCount,
-                        samples: samples
+                        samples: samples,
+                        user: mongoose.Types.ObjectId(req.user.id)
                     });
 
                 SampleFrame.findOne( { "id": a.id }, function(err,f) {

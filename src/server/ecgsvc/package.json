@@ -14,7 +14,7 @@
       "express": "^3.5.0",
       "express-handlebars": "^2.0.1",
       "https": "1.0.0",
-      "node-oauth2-server": "^2.4.0",
+      "oauth2-server": "https://github.com/rrainey/node-oauth2-server/tarball/master",
       "mongoose": "^4.4.3",
       "https": "*",
       "fs": "*",

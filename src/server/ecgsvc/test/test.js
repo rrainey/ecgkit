@@ -4,14 +4,14 @@ var expect = require('chai').expect,
     request = require('request');
 
 var
-    service = require('../service'),
     bodyParser = require('body-parser'),
     model = require('../models/model'),
     fs = require('fs'),
     mongoose = require('mongoose'),
     https = require('https'),
-    oauthserver = require('node-oauth2-server'),
+    oauthserver = require('oauth2-server'),
     SampleFrame = require('../models/SampleFrame'),
+    ECGSample = require('../models/ECGSample'),
     express = require('express'),
     bcrypt = require('bcryptjs'),
     nasync = require('async');
@@ -33,6 +33,7 @@ var app = express();
 var rooturl = 'https://' + config.testHost + ':9443/';
 var tokenurl = 'https://' + config.testHost + ':9443/oauth/token';
 var apiurl = 'https://' + config.testHost + ':9443/api/sampleframe';
+var sampleurl = 'https://' + config.testHost + ':9443/api/samples';
 
 app.use(bodyParser.urlencoded({ extended: true }));
  
@@ -52,6 +53,7 @@ app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
     var data = req.body.data;
     var toBeSaved = [];
     var calls = [];
+    
     // 'data' array present?
     if ( typeof data === 'undefined' || data === null ) {
         res.json( { "keys": keys, "status": "missing data array in request" } );
@@ -69,16 +71,23 @@ app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
                  typeof item.samples === 'string') {
 
                 var samples = new Buffer(item.samples, "base64");
+                
+                // normalize id by zero-padding timestamp portion
+                var tempId = item.id.split('.');
+                var s = "0000000" + tempId[1];
+                var paddedId = tempId[0] + '.' + s.substr(s.length-8);
 
+                // add sample frame
                 var a = new SampleFrame(
                     {
-                        id: item.id,
+                        id: paddedId,
                         datasetId: item.datasetId,
                         date: item.date,
                         timestamp: item.timestamp,
                         endTimestamp: item.endTimestamp,
                         sampleCount: item.sampleCount,
-                        samples: samples
+                        samples: samples,
+                        user: mongoose.Types.ObjectId(req.user.id)
                     });
 
                 SampleFrame.findOne( { "id": a.id }, function(err,f) {
@@ -122,7 +131,97 @@ app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
 
 });
 
+app.get('/api/samples', app.oauth.authorise(), function(req, res) {
 
+    SampleFrame.find({}).
+        distinct( "datasetId" , function(err, frames) {
+            if (err)
+                res.send({"error": err});
+            else
+                res.send(frames);
+    });
+});
+        
+app.get('/api/samples/:id', app.oauth.authorise(), function(req, res) {
+    var response = {};
+    ECGSample.findOne({datasetId: req.param.id}, function(err, sample) {
+        if (err)
+                res.send(err);
+        if (sample) {
+            // cached consolidated version of the data exists.
+            res.send(sample);
+        }
+        else {
+            // No consolidated sample cached for this ECG dataaset -- generate it.
+            if (typeof req.params.id === 'undefined') {
+                res.send({error: "must supply a record id"});
+            }
+            var start = new Date().getTime();
+            SampleFrame.find({datasetId: req.params.id}).
+                sort({ id: 1 }).
+                exec(function(err, frames) {
+                    var date;
+                    var datasetId;
+                    var user;
+                    var timestamp = 0;
+                    var endTimestamp = 0;
+                    var sampleCount = 0;
+                    var firstFrame = true;
+                    var cur = 0;
+                
+                    if (err)
+                        res.send( {error: err} );
+                
+                    frames.forEach(function(frame) {
+                        sampleCount += frame.sampleCount;
+                    });
+                    var buf = new Buffer(sampleCount*2);
+                    frames.forEach(function(frame) {
+                        var j = 0;
+                        if (firstFrame) {
+                            firstFrame = false;
+                            datasetId = frame.datasetId;
+                            date = frame.datasetId;
+                            user = frame.user;
+                            timestamp = frame.timestamp;
+                        }
+                        endTimestamp = frame.endTimestamp;
+                        // copy buffer
+                        frame.samples.copy(buf, cur);
+                        cur += frame.sampleCount*2;
+                    });
+                
+                    var end = new Date().getTime();
+                    var elapsed = end - start;
+                
+                    var a = new ECGSample(
+                    {
+                        datasetId: datasetId,
+                        date: date,
+                        timestamp: timestamp,
+                        endTimestamp: endTimestamp,
+                        sampleCount: sampleCount,
+                        samples: buf,
+                        user: user,
+                        generationElapsedTime: elapsed
+                    });
+                
+                    a.save( function(err) {
+                        if (err) {
+                            res.send({error: "error on save of ECG sample"});
+                        }
+                        else {
+                            // mask metadata values and send result
+                            delete a["_id"];
+                            delete a["user"];
+                            delete a["generationElapsedTime"];
+                            res.send(a);
+                        }
+                    });
+                });
+        }
+    });
+});
 
 app.get('/', app.oauth.authorise(), function (req, res) {
     res.send('Secret area');
@@ -266,7 +365,7 @@ suite('Server Tests', function () {
         
         it('valid credentials should return 200', function (done) {
             var options = {
-                url: 'https://DALM00543038A:9443/oauth/token',
+                url: tokenurl,
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'
                 },
@@ -303,7 +402,7 @@ suite('Server Tests', function () {
          
          it('use a bearer token', function (done) {
             var options = {
-                url: 'https://DALM00543038A:9443/',
+                url: rooturl,
                 headers: {
                   'Authorization': "Bearer " + auth_token
                 },
@@ -326,9 +425,9 @@ suite('Server Tests', function () {
                 },
                 
                 body: "{ \"data\": [ {\n" +
-                  "\"id\": \"06b5c78c-9836-466a-86fd-1342ceec5d4b.0\",\n" +
+                  "\"id\": \"06b5c78c-9836-466a-86fd-1342ceec5d40.00000000\",\n" +
                   "\"date\": \"2015-01-01\",\n" +
-                  "\"datasetId\": \"06b5c78c-9836-466a-86fd-1342ceec5d4b\",\n" +
+                  "\"datasetId\": \"06b5c78c-9836-466a-86fd-1342ceec5d40\",\n" +
                   "\"timestamp\": 0,\n" +
                   "\"endTimestamp\": 23,\n" +
                   "\"sampleCount\": 20,\n" +
@@ -339,6 +438,7 @@ suite('Server Tests', function () {
                 rejectUnauthorized: false, 
             };
             request.post(options, function (err, res, body){
+                //console.log("body: "+body);
                 expect(err).to.equal(null);
                 //console.log("err " + err);
                 //console.log("res " + JSON.stringify(res, null, 2));
@@ -365,13 +465,13 @@ suite('Server Tests', function () {
                 var x = JSON.parse(body);
                 expect(x.status).to.equal('ok');
                 expect(x.keys[0].status).to.equal(undefined);
-                expect(x.keys[0].id).to.equal("06b5c78c-9836-466a-86fd-1342ceec5d4b.10021");
+                expect(x.keys[0].id).to.equal("06b5c78c-9836-466a-86fd-1342ceec5d4b.00010021");
                 expect(res.statusCode).to.equal(200);
                 done();
               });
         });
          
-         it('attempt to add duplicate sample frames', function (done) {
+         it('add duplicate sample frames', function (done) {
             var options = {
                 url: apiurl,
                 headers: {
@@ -388,13 +488,13 @@ suite('Server Tests', function () {
                 //console.log("res " + JSON.stringify(body, null, 2));
                 var x = JSON.parse(body);
                 expect(x.keys[0].status).to.equal('duplicate');
-                expect(x.keys[0].id).to.equal("06b5c78c-9836-466a-86fd-1342ceec5d4b.10021");
+                expect(x.keys[0].id).to.equal("06b5c78c-9836-466a-86fd-1342ceec5d4b.00010021");
                 expect(res.statusCode).to.equal(200);
                 done();
               });
         });
          
-         it('attempt to add single batched sample frame', function (done) {
+         it('add single batched sample frame', function (done) {
             var options = {
                 url: apiurl,
                 headers: {
@@ -412,7 +512,45 @@ suite('Server Tests', function () {
                 var x = JSON.parse(body);
                 expect(x.status).to.equal('ok');
                 expect(x.keys[0].status).to.equal(undefined);
-                expect(x.keys[0].id).to.equal("da38eb30-402b-4fe7-b3b5-79d6c99848cf.10685");
+                expect(x.keys[0].id).to.equal("da38eb30-402b-4fe7-b3b5-79d6c99848cf.00010685");
+                expect(res.statusCode).to.equal(200);
+                done();
+              });
+        });
+         
+         it('get samples list', function (done) {
+            var options = {
+                url: sampleurl,
+                headers: {
+                  'Authorization': "Bearer " + auth_token
+                },
+                rejectUnauthorized: false, 
+            };
+            request.get(options, function (err, res, body){
+                expect(err).to.equal(null);
+                //console.log("err " + err);
+                //console.log("res " + JSON.stringify(body, null, 2));
+                var x = JSON.parse(body);
+                expect(x.length).to.equal(3);
+                expect(res.statusCode).to.equal(200);
+                done();
+              });
+        });
+         
+         it('get a specific sample', function (done) {
+            var options = {
+                url: sampleurl + "/" + "06b5c78c-9836-466a-86fd-1342ceec5d4b",
+                headers: {
+                  'Authorization': "Bearer " + auth_token
+                },
+                rejectUnauthorized: false, 
+            };
+            request.get(options, function (err, res, body){
+                expect(err).to.equal(null);
+                //console.log("err " + err);
+                //console.log("res " + JSON.stringify(body, null, 2));
+                var x = JSON.parse(body);
+                expect(x.sampleCount).to.equal(140);
                 expect(res.statusCode).to.equal(200);
                 done();
               });
