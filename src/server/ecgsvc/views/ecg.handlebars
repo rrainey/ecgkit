@@ -5,29 +5,8 @@
     var timestamp_ms;
     var sampleInterval_ms;
     var auth;
-    requirejs.config({
-        baseUrl: '/components',
-        paths: {
-            //assets: '../examples/assets',
-            //dist: '../dist',
-
-            'jquery': 'jquery/dist/jquery',
-            'bootstrap': 'bootstrap/dist/js/bootstrap',
-            'jquery-oauth': 'jquery-oauth/dist/jquery.oauth',
-            'store': 'store-js/store'
-        }
-    });
-
-    requirejs(['jquery-oauth'], function(jqOAuth){
-        auth = new jqOAuth({
-            events: {
-               logout: function(){},
-               login:  function(){},
-               tokenExpiration: function(){}
-            }
-        });
-        
-        var scale = 4.0;    // pixels per division; 0.1 mV vertical, 0.04 sec / horizontal
+    
+            var scale = 4.0;    // pixels per division; 0.1 mV vertical, 0.04 sec / horizontal
         var hScale = 0.001; // volts per division (vertical scale)
         var vScale = 40.0;  // ms per division (horizontal scale)
         
@@ -149,24 +128,46 @@
                 alert( "error" );
             });
         }
+    requirejs.config({
+        baseUrl: '/components',
+         shim : {
+            "bootstrap" : { "deps" :['jquery'] }
+        },
+        paths: {
+            //assets: '../examples/assets',
+            //dist: '../dist',
+
+            'jquery': 'jquery/dist/jquery',
+            'bootstrap': 'bootstrap/dist/js/bootstrap',
+            'jquery-oauth': 'jquery-oauth/dist/jquery.oauth',
+            'store': 'store-js/store'
+        }
+    });
+
+    requirejs(['jquery-oauth'], function(jqOAuth){
+        auth = new jqOAuth({
+            events: {
+               logout: function(){},
+               login:  function(){},
+               tokenExpiration: function(){}
+            }
+        });
         
         getSamples("da38eb30-402b-4fe7-b3b5-79d6c99848cf");
                               
     });
-    
-    var datasetArray = [];
-    
-    function loadDataset(n) {
-        getSamples(datasetArray[n]);
-    }
     
     requirejs(['jquery','jquery-oauth','bootstrap'], function(){
         
         function populateDatasetDropdown() {
             var jqxhr = $.get( "/api/samples")
             .done(function(body) {
-                datasetArray = body;
-                var list = document.getElementById("datasetDropdown"); 
+                var list = document.getElementById("datasetDropdown");
+                // remove existing children
+                while (list.firstChild) {
+                    list.removeChild(list.firstChild);
+                }
+                // add results of query
                 for (var i = 0; i < body.length; i++){                
                     var opt = body[i];  
                     var li = document.createElement("li");
@@ -174,12 +175,14 @@
                     var text = document.createTextNode(opt);
                     link.appendChild(text);
                     link.href = "#";
+                    link.id = opt;
                     li.appendChild(link);
                     list.appendChild(li);
                     
                     jQuery("#" + opt).click(function(e){
                         //do something
-                        loadDataset(i);
+                        e.preventDefault();
+                        getSamples(this.id);
                     });
                   }
             })
