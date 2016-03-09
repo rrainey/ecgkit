@@ -1,0 +1,154 @@
+<!-- views/signin.handlebars -->
+<script>
+    var auth;
+    requirejs.config({
+        baseUrl: '/components',
+        paths: {
+            //assets: '../examples/assets',
+            //dist: '../dist',
+
+            'jquery': 'jquery/dist/jquery',
+            'bootstrap': 'bootstrap/dist/js/bootstrap',
+            'jquery-oauth': 'jquery-oauth/dist/jquery.oauth',
+            'store': 'store-js/store'
+        }
+    });
+
+    requirejs(['jquery-oauth'], function(jqOAuth){
+        auth = new jqOAuth({
+            events: {
+               logout: function(){},
+               login:  function(){},
+               tokenExpiration: function(){}
+            }
+        });
+        
+        $("#login").submit(function(){
+            login();
+            return false;
+        });
+    });
+    
+    function comparePW() {
+        var p1 = document.getElementById('password');
+        var p2 = document.getElementById('cpassword');
+        var btn = document.getElementById('registerBtn');
+        var message = document.getElementById('confirmMessage');
+        var goodColor = '#6b6';
+        var badColor = '#f66';
+        if (p1.value === p2.value) {
+            p2.style.backgroundColor = goodColor;
+            message.style.color = goodColor;
+            message.innerHTML = "&#9989;";
+            btn.disabled = false;
+        } else {
+            p2.style.backgroundColor = badColor;
+            message.style.color = badColor;
+            message.innerHTML = "";
+            btn.disabled = true;
+        }
+    }
+    
+    function login() {
+        var p1 = document.getElementById('epassword');
+        var u1 = document.getElementById('eusername');
+        $.ajax({
+            url: "/oauth/token",
+            method: "POST",
+            data: {
+               username:   u1.value,
+               password:   p1.value,
+               grant_type: "password",
+               client_id:  "CLIENT_ID"
+           },
+           statusCode: {
+               200: function(response) {
+                   auth.login(response.access_token, response.expires_in);
+                   window.location = "/ecg";
+               },
+               401: function() {
+                   alert("The username or password was not correct. Try again.");
+               }
+           }
+        });
+        
+    }
+</script>
+<div class="jumbotron">
+    <h1>Welcome</h1>
+    <p>Log in or register as a new user.</p>
+    <p>
+    </p>
+
+    <form id="login">
+        <p/>
+        <table>
+            <tr>
+                <td><label>Username:</label></td>
+                <td><input type="text" name="username" id='eusername'/></td>
+            </tr>
+            <tr>
+                <td><label>Password:</label></td>
+                <td><input type="password" name="password" id='epassword'/></td>
+            </tr>
+        </table><p/>
+        <div>
+            <input type="submit" class="btn btn-primary btn-sm" value="Continue"  />
+        </div>
+        <div id="local">
+            <!-- <a data-toggle="collapse" href="#local-sign-in" class="btn btn-default btn-md" role="button">I already have an account</a> -->
+            <a data-toggle="collapse" href="#register" class="btn btn-default btn-md" role="button">I need to create an account</a>
+        </div>
+    </form>
+
+    <form id="register" class="collapse" action="/users/register" method="post">
+        <p></p>
+        <table>
+            <tr>
+                <td>
+                    <label>First name:</label>
+                </td>
+                <td>
+                    <input type="text" name="fname" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Last name:</label>
+                </td>
+                <td>
+                    <input type="text" name="lname" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Pick a username:</label>
+                </td>
+                <td>
+                    <input type="text" name="username" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Pick a Password:</label>
+                </td>
+                <td>
+                    <input type="password" name="password" id="password" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Confirm Password:</label>
+                </td>
+                <td>
+                    <input type="password" name="cpassword" onkeyup="comparePW(); return false;" id="cpassword" />
+                    <span id="confirmMessage" class="confirmMessage"></span></td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="submit" class="btn btn-primary btn-sm" value="Register" id="registerBtn" disabled="true" />
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>

@@ -1,0 +1,207 @@
+<!-- views/ecg.handlebars -->
+<script>
+    var dataset;
+    var sampleCount;
+    var timestamp_ms;
+    var sampleInterval_ms;
+    var auth;
+    requirejs.config({
+        baseUrl: '/components',
+        paths: {
+            //assets: '../examples/assets',
+            //dist: '../dist',
+
+            'jquery': 'jquery/dist/jquery',
+            'bootstrap': 'bootstrap/dist/js/bootstrap',
+            'jquery-oauth': 'jquery-oauth/dist/jquery.oauth',
+            'store': 'store-js/store'
+        }
+    });
+
+    requirejs(['jquery-oauth'], function(jqOAuth){
+        auth = new jqOAuth({
+            events: {
+               logout: function(){},
+               login:  function(){},
+               tokenExpiration: function(){}
+            }
+        });
+        
+        var scale = 4.0;    // pixels per division; 0.1 mV vertical, 0.04 sec / horizontal
+        var hScale = 0.001; // volts per division (vertical scale)
+        var vScale = 40.0;  // ms per division (horizontal scale)
+        
+        
+        function YCoord(y) {
+            var yScale = 300/1024; // aiming for 0.1mV / division
+            var yOrigin = 100;
+            return yOrigin - 0.1 * y;
+        }
+        
+        function drawGrid(ctx, pass, w, height) {
+            var scale = w / (10.0 * 25.0);
+            var jTop = (w/ scale) + 1;
+            var iTop = (height / scale) + 1;
+            for (var h=0;h<jTop;h++) {
+
+                for (var i=0;i<iTop;i++){
+                    if (pass == 1 && (i % 5) == 0 ) {
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = "#cd7373";
+                        ctx.beginPath();
+                        ctx.moveTo(h*scale-0.5,i*scale+0.5);
+                        ctx.lineTo(h*scale-scale - .5,i*scale+0.5);
+                        ctx.stroke();
+                    }
+                    else if (pass == 0) {
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = "#edcdcd";
+                        ctx.beginPath();
+                        ctx.moveTo(h*scale-0.5,i*scale+0.5);
+                        ctx.lineTo(h*scale-scale - .5,i*scale+0.5);
+                        ctx.stroke();
+                    }
+                    
+                }
+                if (pass == 1 && (h % 5) == 0 ) {
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = "#cd7373";
+                    ctx.beginPath();
+                    ctx.moveTo(scale*h-0.5,0);
+                    ctx.lineTo(scale*h-0.5,height);
+                    ctx.stroke();
+                }
+                else if (pass == 0) {
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = "#edcdcd";
+                    ctx.beginPath();
+                    ctx.moveTo(scale*h-0.5,0);
+                    ctx.lineTo(scale*h-0.5,height);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function drawBackground(){
+            var canvasBackground = document.getElementById('monitorBackground');
+            if (canvasBackground.getContext){
+                for (var pass=0; pass<2; ++pass) {
+                    var ctx = canvasBackground.getContext('2d');
+                    drawGrid (ctx, pass, canvasBackground.offsetWidth, canvasBackground.offsetHeight);
+                }
+            }
+        }
+        
+        function plotBlock(n) {
+            
+            // samples in this block to be plotted
+            var samples = 0;
+            // first sample in the plotted block
+            var blockBase = 0;
+            if (sampleCount * sampleInterval_ms <= 10000.0 ) {
+                samples = sampleCount;
+            }
+            else {
+                samples = 10000.0 / sampleInterval_ms;
+            }
+            
+            // plot data
+            var canvasBackground = document.getElementById('monitorBackground');
+            // plot the n-th ten second block
+            var width_px = canvasBackground.offsetWidth;
+            var lineClr = "#222";
+            if (canvasBackground.getContext) {
+                var ctx = canvasBackground.getContext('2d');
+        
+                ctx.strokeStyle = lineClr;
+                
+                var time_px = 0;
+                var tick_px = width_px * (10000.0 / sampleInterval_ms); // sample interval in pixels
+                
+                ctx.beginPath();
+                ctx.moveTo(time_px,YCoord(dataset[0]));
+                for (var i=0; i<samples; ++i) {
+                    time_px += tick_px;
+                    ctx.lineTo(time_px,YCoord(dataset[i]));
+                }
+                ctx.stroke();
+            }
+        }
+        
+        function getSamples(id) {
+            var jqxhr = $.get( "/api/sampleframe?datasetId="+id)
+            .done(function(body) {
+                sampleCount = body.data[0].sampleCount;
+                dataset = new Uint16Array(sampleCount);
+                timestamp_ms = body.data[0].timestamp;
+                sampleInterval_ms = (body.data[0].endTimestamp - timestamp_ms) / (sampleCount-1);
+                var src = body.data[0].samples.data; 
+                var j = 0;
+                for(var i=0; i<sampleCount; ++i) {
+                    dataset[i] = src[j] << 8 || src[j+1];
+                    j += 2;
+                }
+                drawBackground();
+                // plot first ten seconds of data
+                plotBlock(0);
+            })
+            .fail(function(err) {
+                alert( "error" );
+            });
+        }
+        
+        getSamples("da38eb30-402b-4fe7-b3b5-79d6c99848cf");
+                              
+    });
+    
+    var datasetArray = [];
+    
+    function loadDataset(n) {
+        getSamples(datasetArray[n]);
+    }
+    
+    requirejs(['jquery','jquery-oauth','bootstrap'], function(){
+        
+        function populateDatasetDropdown() {
+            var jqxhr = $.get( "/api/samples")
+            .done(function(body) {
+                datasetArray = body;
+                var list = document.getElementById("datasetDropdown"); 
+                for (var i = 0; i < body.length; i++){                
+                    var opt = body[i];  
+                    var li = document.createElement("li");
+                    var link = document.createElement("a");             
+                    var text = document.createTextNode(opt);
+                    link.appendChild(text);
+                    link.href = "#";
+                    li.appendChild(link);
+                    list.appendChild(li);
+                    
+                    jQuery("#" + opt).click(function(e){
+                        //do something
+                        loadDataset(i);
+                    });
+                  }
+            })
+            .fail(function(err) {
+                alert( "error" );
+            });
+        }
+        
+        populateDatasetDropdown();
+    });
+</script>
+<div class="wrapper">
+    
+    <div class="dropdown">
+      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+        Select a Data Set
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" id="datasetDropdown">
+      </ul>
+    </div>
+    <div style="margin:30px auto; position: relative; border:1px solid black; height:300px; width:1600px; ">
+        <canvas class="gradient" id="monitorBackground" width="1600" height="300" style="position: absolute; left: 0; top: 0; z-index: 0;">Your browser is out of date.</canvas>
+    </div>
+</div>

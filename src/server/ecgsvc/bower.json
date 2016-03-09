@@ -1,0 +1,12 @@
+{
+  "name": "ecgsvc",
+  "version": "0.0.1",
+  "dependencies": {
+    "bootstrap": "~3.3.6",
+    "jquery-oauth": "~2.1.3",
+    "requirejs": "~2.1.16",
+    "jquery": ">=1.5",
+    "store-js": "~1.3.17"
+  },
+  "private": true
+}

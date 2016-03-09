@@ -75,7 +75,7 @@ model.getAccessToken = function (bearerToken, callback) {
 };
 
 model.getClient = function (clientId, clientSecret, callback) {
-  console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
+  //console.log('in getClient (clientId: ' + clientId + ', clientSecret: ' + clientSecret + ')');
   if (clientSecret === null || typeof clientSecret === undefined) {
     OAuthClientsModel.findOne({ clientId: clientId }, callback);
   }
@@ -87,7 +87,7 @@ model.getClient = function (clientId, clientSecret, callback) {
 var authorizedClientIds = ['CLIENT_ID', 'CLIENT_ID2'];
 model.grantTypeAllowed = function (clientId, grantType, callback) {
   var result = false;
-  console.log('in grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');
+  //console.log('in grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');
 
     // password grant type always allowed in our case
   if (grantType === 'password') {
@@ -100,7 +100,7 @@ model.grantTypeAllowed = function (clientId, grantType, callback) {
 };
 
 model.saveAccessToken = function (token, clientId, expires, userId, callback) {
-  console.log('in saveAccessToken (token: ' + token + ', clientId: ' + clientId + ', userId: ' + userId + ', expires: ' + expires + ')');
+  //console.log('in saveAccessToken (token: ' + token + ', clientId: ' + clientId + ', userId: ' + userId + ', expires: ' + expires + ')');
     
     if (typeof userId === undefined || userId === null) {
         console.log("no valid access token to save; probably invalid credentials");
@@ -141,7 +141,7 @@ model.getUser = function (username, password, callback) {
  * Required to support refreshToken grant type
  */
 model.saveRefreshToken = function (token, clientId, expires, userId, callback) {
-  console.log('in saveRefreshToken (token: ' + token + ', clientId: ' + clientId +', userId: ' + userId + ', expires: ' + expires + ')');
+  //console.log('in saveRefreshToken (token: ' + token + ', clientId: ' + clientId +', userId: ' + userId + ', expires: ' + expires + ')');
 
   var refreshToken = new OAuthRefreshTokensModel({
     refreshToken: token,
@@ -154,7 +154,7 @@ model.saveRefreshToken = function (token, clientId, expires, userId, callback) {
 };
 
 model.getRefreshToken = function (refreshToken, callback) {
-  console.log('in getRefreshToken (refreshToken: ' + refreshToken + ')');
+  //console.log('in getRefreshToken (refreshToken: ' + refreshToken + ')');
 
   OAuthRefreshTokensModel.findOne({ refreshToken: refreshToken }, callback);
 };

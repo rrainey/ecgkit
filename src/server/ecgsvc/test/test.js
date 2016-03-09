@@ -18,9 +18,9 @@ var
 
 var config = JSON.parse(fs.readFileSync('./config.json'))[process.env.NODE_ENV || 'dev'];
 
-console.log(process.env.NODE_ENV);
+//console.log(process.env.NODE_ENV);
 
-console.log(JSON.stringify(config));
+//console.log(JSON.stringify(config));
 
 mongoose.connect(config.mongoConnection);
 
@@ -42,7 +42,7 @@ app.use(bodyParser.json());
 app.oauth = oauthserver({
   model: require('../models/model'),
   grants: ['password'],
-  debug: true
+  debug: false
 });
  
 app.all('/oauth/token', app.oauth.grant());
@@ -129,6 +129,29 @@ app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
     });
 
 
+});
+
+app.get('/api/sampleframe', app.oauth.authorise(), function(req, res) {
+    
+    var datasetId = req.query.datasetId;
+    
+    if (datasetId !== null && typeof datasetId !== "undefined") {
+        SampleFrame.find({'datasetId': datasetId }).
+            sort({'timestamp': 1}).
+            exec(function(err, frames) {
+                if (err)
+                    res.send({"error": err});
+                else if (frames.length > 0) {
+                    res.send({ "data": frames });
+                }
+                else {
+                    res.send({ "data": [] });
+                }
+            });
+    }
+    else {
+        res.send( {"error": "missing a datasetId parameter"});
+    }
 });
 
 app.get('/api/samples', app.oauth.authorise(), function(req, res) {
@@ -537,7 +560,7 @@ suite('Server Tests', function () {
               });
         });
          
-         it('get a specific sample', function (done) {
+         it('get a consolidated sample', function (done) {
             var options = {
                 url: sampleurl + "/" + "06b5c78c-9836-466a-86fd-1342ceec5d4b",
                 headers: {
