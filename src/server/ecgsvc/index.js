@@ -162,7 +162,7 @@ app.get('/api/samples', app.oauth.authorise(), function(req, res) {
         
 app.get('/api/samples/:id', app.oauth.authorise(), function(req, res) {
     var response = {};
-    ECGSample.findOne({datasetId: req.param.id}, function(err, sample) {
+    ECGSample.findOne({datasetId: req.params.id}, function(err, sample) {
         if (err)
                 res.send(err);
         if (sample) {
@@ -226,7 +226,7 @@ app.get('/api/samples/:id', app.oauth.authorise(), function(req, res) {
                 
                     a.save( function(err) {
                         if (err) {
-                            res.send({error: "error on save of ECG sample"});
+                            res.send({error: "error on save of ECG sample: " + err.errmsg });
                         }
                         else {
                             // mask metadata values and send result

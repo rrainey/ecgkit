@@ -167,7 +167,7 @@ app.get('/api/samples', app.oauth.authorise(), function(req, res) {
         
 app.get('/api/samples/:id', app.oauth.authorise(), function(req, res) {
     var response = {};
-    ECGSample.findOne({datasetId: req.param.id}, function(err, sample) {
+    ECGSample.findOne({datasetId: req.params.id}, function(err, sample) {
         if (err)
                 res.send(err);
         if (sample) {
@@ -558,9 +558,28 @@ suite('Server Tests', function () {
                 expect(res.statusCode).to.equal(200);
                 done();
               });
-        });
+         });
          
          it('get a consolidated sample', function (done) {
+            var options = {
+                url: sampleurl + "/" + "06b5c78c-9836-466a-86fd-1342ceec5d4b",
+                headers: {
+                  'Authorization': "Bearer " + auth_token
+                },
+                rejectUnauthorized: false, 
+            };
+            request.get(options, function (err, res, body){
+                expect(err).to.equal(null);
+                //console.log("err " + err);
+                //console.log("res " + JSON.stringify(body, null, 2));
+                var x = JSON.parse(body);
+                expect(x.sampleCount).to.equal(140);
+                expect(res.statusCode).to.equal(200);
+                done();
+              });
+         });
+         
+         it('get a consolidated sample again (check caching logic)', function (done) {
             var options = {
                 url: sampleurl + "/" + "06b5c78c-9836-466a-86fd-1342ceec5d4b",
                 headers: {
