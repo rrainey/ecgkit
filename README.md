@@ -49,15 +49,30 @@ Using Android Studio 1.5.1
 **Server**
 The server is implemented using Node.JS. MongoDB is used for persistent storage. A simple data viewing web site was implemented using Bootstrap.
 
-Use npm and [bower](https://github.com/bower/bower) to install the dependent components:
+Use npm and [bower](https://github.com/bower/bower) to install the dependent components.
 
 <code>$ npm install -g bower</code>
+
 <code>$ cd src/server/ecgsvc</code>
+
 <code>$ npm install</code>
+
+Bower needs some coaxing to install the browser JS components in the "public" folder. You must manually create a file in your home directory named <code>.bowerrc</code>.
+
+<code>$ vi ~/.bowerrc</code>
+
+Add these lines to the file:
+
+<code>{
+  "directory" : "public/components"
+}</code>
+
+You can then run Bower.
+
 <code>$ bower install</code>
 
 Start your MongoDB instance. Check the settings in <code>config.json</code>.  Update the Mongo URL as required. The defaults reference a database on localhost named "site".
 
 <code>$ node index.js</code># this will run the server
 
-For a simulated production environment, I run all of this on an Unbuntu server using the Node pm2 package to manage the servers.
+For a simulated production environment, I run all of this on an Unbuntu server using the Node pm2 package to manage the service.

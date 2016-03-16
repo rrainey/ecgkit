@@ -13,8 +13,8 @@
 
     function YCoord(y) {
         var yScale = 300/1024; // aiming for 0.1mV / division
-        var yOrigin = 100;
-        return yOrigin - 0.1 * y;
+        var yOrigin = 400;
+        return yOrigin - 0.5 * y;
     }
 
     function drawGrid(ctx, pass, w, height) {
@@ -64,8 +64,9 @@
     function drawBackground(){
         var canvasBackground = document.getElementById('monitorBackground');
         if (canvasBackground.getContext){
+            var ctx = canvasBackground.getContext('2d');
+            ctx.clearRect(0, 0, canvasBackground.offsetWidth, canvasBackground.offsetHeight);
             for (var pass=0; pass<2; ++pass) {
-                var ctx = canvasBackground.getContext('2d');
                 drawGrid (ctx, pass, canvasBackground.offsetWidth, canvasBackground.offsetHeight);
             }
         }
@@ -95,7 +96,7 @@
             ctx.strokeStyle = lineClr;
 
             var time_px = 0;
-            var tick_px = width_px * (10000.0 / sampleInterval_ms); // sample interval in pixels
+            var tick_px = width_px / (10000.0 / sampleInterval_ms); // sample interval in pixels
 
             ctx.beginPath();
             ctx.moveTo(time_px,YCoord(dataset[0]));
@@ -111,13 +112,13 @@
         var jqxhr = $.get( "/api/samples/"+id)
         .done(function(body) {
             sampleCount = body.sampleCount;
-            dataset = new Uint16Array(sampleCount);
+            dataset = new Int16Array(sampleCount);
             timestamp_ms = body.timestamp;
             sampleInterval_ms = (body.endTimestamp - timestamp_ms) / (sampleCount-1);
             var src = body.samples.data; 
             var j = 0;
             for(var i=0; i<sampleCount; ++i) {
-                dataset[i] = src[j] << 8 || src[j+1];
+                dataset[i] = ((src[j+1] & 0xff) << 8) | (src[j] & 0xff);
                 j += 2;
             }
             drawBackground();

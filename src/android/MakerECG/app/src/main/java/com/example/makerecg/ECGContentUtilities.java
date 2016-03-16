@@ -44,8 +44,8 @@ public class ECGContentUtilities {
 
         int j = 0;
         for(int i=0; i<frame.getSampleCount(); ++i) {
-            s[j] = (byte)((samples[i] >> 8) & 0xff);
-            s[j+1] = (byte)(samples[i] & 0xff);
+            s[j+1] = (byte)((samples[i] >> 8) & 0xff);
+            s[j] = (byte)(samples[i] & 0xff);
             j+=2;
         }
 
@@ -136,7 +136,7 @@ public class ECGContentUtilities {
         short [] samples = new short[length];
         int j = 0;
         for(int i=0; i<length; ++i) {
-            samples[i] = (short) (((bytes[j] << 8) & 0xff00) | (bytes[j+1] & 0xff));
+            samples[i] = (short) ((((short) bytes[j+1] & 0xff) << 8) | ((short) bytes[j] & 0xff));
             j+=2;
         }
         return samples;

@@ -73,6 +73,9 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 	private boolean mbAverageSampleSeries = false;
 	
 	static final byte CMD_GET_PROTO_VERSION = 1; // () -> (u8 protocolVersion)
+												 // () -> (u8 firmware major)
+												 // () -> (u8 firmware minor)
+	                                             // () -> (u8 ecg hardware; 1=Olimex)
 	static final byte CMD_GET_SENSORS = 2; // () -> (sensors:
 											// i32,i32,i32,i32,u16,u16,u16,u16,u16,u16,u16,i16,i16,i16,i16,i16,i16)
 	static final byte CMD_FILE_LIST = 3; // FIRST: (char name[]) -> (fileinfo or
@@ -107,8 +110,14 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 	                                    // u8 (1=on/0=off), u16 (channel mask), u32 (poll interval_ms), u16 (max pipeline delay_ms)
 										// turns on/off sampling; accessory replies with the full contents of the original message to ack that it has been processed
 	static final byte CMD_X_TELEMETRY_BLOCK = 18; // 
-    									// u32 (poll interval_ms), u32 (start_timestamp_ms), u32 (end_timestamp_ms), u16(channel mask), u16 (sample count, N), num channels * N * i16 (sample array)
+    									// u16 (poll interval_ms), u32 (start_timestamp_ms), u32 (end_timestamp_ms), u16(channel mask), u16 (sample count, N), num channels * N * i16 (sample array)
 										// these messages are only sent from the accessory to the Android device, and only sent while sampling state is "on".
+
+	private int deviceProtocolVersion;
+	private int deviceRevisionMajor;
+	private int deviceRevisionMinor;
+	private int deviceHarwareConfig;
+
 	/*
 	 * TODO: Add extra message types here (both output and input messages)
 	 */
@@ -208,6 +217,7 @@ public class ECGActivity extends Activity implements Callback, Runnable {
         
         if (bChecked) {
         	ADSampleQueue.getSingletonObject().thaw();
+            //sendCommand(CMD_SETTINGS, CMD_SETTINGS);
         	//t.setChecked(false);
         } 
         else {
@@ -756,6 +766,23 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 	}
 	*/
 
+	private void handleSettingsCommand(byte[] bufferBytes) {
+
+		ADSampleFrame f;
+		int n;
+		int i;
+
+		if (gLogPackets) {
+			Log.d(ADK.TAG,
+					"SettingsCommand: " + Utilities.dumpBytes(bufferBytes, bufferBytes.length));
+		}
+
+        deviceProtocolVersion = bufferBytes[0];
+        deviceRevisionMajor = bufferBytes[1];
+        deviceRevisionMinor = bufferBytes[2];
+        deviceHarwareConfig = bufferBytes[3];
+    }
+
 	private void handleLockCommand(byte[] lockedBytes) {
 		if (gLogPackets)
 			Log.d(ADK.TAG,
@@ -846,10 +873,10 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 	 */
 	private boolean handleDeviceMethod(Message msg) {
 		switch (msg.what) {
-		/*
 		case CMD_SETTINGS:
 			handleSettingsCommand((byte[]) msg.obj);
 			return true;
+		/*
 		case CMD_BT_NAME:
 			handleBtNameCommand((byte[]) msg.obj);
 		case CMD_GET_LICENSE:

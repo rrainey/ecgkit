@@ -1,17 +1,31 @@
 
     <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-        <PreferenceCategory android:title="Data">
+        <PreferenceCategory android:title="Arduino Connection">
             <CheckBoxPreference
-                android:key="useMQTT"
+                android:key="prefer_bluetooth"
                 android:defaultValue="true"
-                android:title="Send ECG traces to Secure Cloud" />
+                android:title="Prefer Bluetooth versus USB" />
             <EditTextPreference
-                android:key="mqttServer"
+                android:key="bluetooth_device_name"
+                android:defaultValue="Arduino"
+                android:title="Bluetooth device" />
+            <CheckBoxPreference
+                android:key="bluetooth_autoconnect"
+                android:defaultValue="false"
+                android:title="Connect whenever available" />
+        </PreferenceCategory>
+        <PreferenceCategory android:title="Sync to Cloud">
+            <CheckBoxPreference
+                android:key="cloud_sync"
+                android:defaultValue="true"
+                android:title="Sync to cloud" />
+            <EditTextPreference
+                android:key="cloud_hostname"
                 android:defaultValue="app1.websimulations.com"
-                android:title="Server Hostname" />
+                android:title="Cloud hostname" />
             <EditTextPreference
-                    android:key="mqttPort"
-                    android:defaultValue="1883"
-                    android:title="Serevr port number" />
+                    android:key="cloud_port"
+                    android:defaultValue="9443"
+                    android:title="Cloud port number" />
         </PreferenceCategory>
     </PreferenceScreen>
