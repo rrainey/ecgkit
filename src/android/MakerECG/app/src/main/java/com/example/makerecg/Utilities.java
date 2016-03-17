@@ -150,6 +150,7 @@ public class Utilities {
 	public static String encodeBase64(short[] samples) {
 		byte [] s = new byte[(int)(samples.length*2)];
 		int j = 0;
+		// Important: switching to big-endian 16-bit values as we send these to the server
 		for(int i=0; i<samples.length; ++i) {
 			s[j] = (byte)((samples[i] >> 8) & 0xff);
 			s[j+1] = (byte)(samples[i] & 0xff);

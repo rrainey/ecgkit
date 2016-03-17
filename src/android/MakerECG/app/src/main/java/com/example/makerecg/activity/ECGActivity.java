@@ -458,6 +458,10 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		//sendCommand(CMD_ALARM_FILE, CMD_ALARM_FILE);
 		//listDirectory(TUNES_FOLDER);
 
+		// flush the current queue of samples -- new ones will be on the way shortly.
+		ADSampleQueue.getSingletonObject().restart();
+
+		// start the message receiver thread.
 		Thread thread = new Thread(null, this, "Maker ECG");
 		thread.start();
 	}

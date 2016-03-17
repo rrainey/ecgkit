@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -41,9 +42,10 @@ public class ECGContentUtilities {
         ContentValues initialValues = new ContentValues();
         short [] samples = frame.getSamples();
         byte [] s = new byte[(int)(frame.getSampleCount()*2)];
-
+        //ByteBuffer b = ByteBuffer.allocate((int)(frame.getSampleCount()*2));
         int j = 0;
         for(int i=0; i<frame.getSampleCount(); ++i) {
+            //b.putShort(samples[i]);
             s[j+1] = (byte)((samples[i] >> 8) & 0xff);
             s[j] = (byte)(samples[i] & 0xff);
             j+=2;
@@ -58,6 +60,7 @@ public class ECGContentUtilities {
         initialValues.put(ECGContentProvider.COLUMN_SAMPLE_COUNT,
                 frame.getSampleCount());
         initialValues.put(ECGContentProvider.COLUMN_SAMPLES, s);
+        //initialValues.put(ECGContentProvider.COLUMN_SAMPLES, b.array());
         initialValues.put(ECGContentProvider.COLUMN_START_TIME_MS,
                 frame.getStartTimestamp());
         initialValues.put(ECGContentProvider.COLUMN_END_TIME_MS,
