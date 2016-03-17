@@ -6,15 +6,16 @@
     var sampleInterval_ms;
     var auth;
     
+    // These values aren't used yet, as I am still looking for information about the
+    // voltage scale gain/calibration of the Olimex ECG Shield.
     var scale = 4.0;    // pixels per division; 0.1 mV vertical, 0.04 sec / horizontal
     var hScale = 0.001; // volts per division (vertical scale)
     var vScale = 40.0;  // ms per division (horizontal scale)
 
-
     function YCoord(y) {
         var yScale = 300/1024; // aiming for 0.1mV / division
-        var yOrigin = 400;
-        return yOrigin - 0.5 * y;
+        var yOrigin = 50;
+        return yOrigin + 0.15 * y;
     }
 
     function drawGrid(ctx, pass, w, height) {
@@ -112,13 +113,14 @@
         var jqxhr = $.get( "/api/samples/"+id)
         .done(function(body) {
             sampleCount = body.sampleCount;
-            dataset = new Int16Array(sampleCount);
+            dataset = new Uint16Array(sampleCount);
             timestamp_ms = body.timestamp;
             sampleInterval_ms = (body.endTimestamp - timestamp_ms) / (sampleCount-1);
             var src = body.samples.data; 
             var j = 0;
             for(var i=0; i<sampleCount; ++i) {
-                dataset[i] = ((src[j+1] & 0xff) << 8) | (src[j] & 0xff);
+                // big-endian bytes to Number
+                dataset[i] = ((src[j] & 0xff) << 8) | (src[j+1] & 0xff);
                 j += 2;
             }
             drawBackground();
@@ -169,23 +171,24 @@
                     list.removeChild(list.firstChild);
                 }
                 // add results of query
-                for (var i = 0; i < body.length; i++){                
-                    var opt = body[i];  
+                var z = body.data;
+                for (var i = 0; i < z.length; i++){                
+                    var opt = z[i];
                     var li = document.createElement("li");
                     var link = document.createElement("a");             
-                    var text = document.createTextNode(opt);
+                    var text = document.createTextNode( opt.date + ": " + opt.datasetId);
                     link.appendChild(text);
                     link.href = "#";
-                    link.id = opt;
+                    link.id = opt.datasetId;
                     li.appendChild(link);
                     list.appendChild(li);
                     
-                    jQuery("#" + opt).click(function(e){
+                    jQuery("#" + opt.datasetId).click(function(e){
                         //do something
                         e.preventDefault();
                         getSamples(this.id);
                     });
-                  }
+                }
             })
             .fail(function(err) {
                 alert( "Something went wrong. We were unable to get the ECG catalog" );

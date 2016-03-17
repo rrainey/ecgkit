@@ -155,13 +155,33 @@ app.get('/api/sampleframe', app.oauth.authorise(), function(req, res) {
 });
 
 app.get('/api/samples', app.oauth.authorise(), function(req, res) {
-
+    // return ids and date of each unique data set
+    var data = [];
+    var status = "ok";
     SampleFrame.find({}).
         distinct( "datasetId" , function(err, frames) {
             if (err)
                 res.send({"error": err});
-            else
-                res.send(frames);
+            else {
+                //res.send(frames);
+                nasync.each(frames, function(item, callback) {
+                    SampleFrame.find({"datasetId": item}, function(err, fs) {
+                        // we should get a list back -- data fields we're interest in here 
+                        // will be the same for each row
+                        if (fs.length > 0) {
+                            data.push( {"datasetId": fs[0].datasetId, "date": fs[0].date});
+                        }
+                        else {
+                            status = "error";
+                        }
+                        callback();
+                    });
+                },
+                function(err) {
+                    // All tasks are done now
+                    res.json( { "data": data, "status": status } );
+                });
+            }
     });
 });
         
@@ -554,7 +574,8 @@ suite('Server Tests', function () {
                 //console.log("err " + err);
                 //console.log("res " + JSON.stringify(body, null, 2));
                 var x = JSON.parse(body);
-                expect(x.length).to.equal(3);
+                expect(x.status).to.equal('ok');
+                expect(x.data.length).to.equal(3);
                 expect(res.statusCode).to.equal(200);
                 done();
               });
