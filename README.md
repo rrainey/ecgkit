@@ -29,7 +29,7 @@ This application uses the xxxx USB/BT library. I chose the Arduino Mega ADK for 
 
 <code>src/android/MakerECG</code>- Android Studio project
 
-<code>src/arduino</code>- Arduino sketch
+<code>src/arduino/bt_ecgkit</code>- Arduino sketch (bt_ecgkit is the BLE version)
 
 <code>src/server/ecgsvc</code>- Node.JS based web service for uploading data sets
 
