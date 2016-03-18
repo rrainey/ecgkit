@@ -3,7 +3,7 @@ An IoT-inspired Arduino Electrocardiograph Project
 
 Riley Rainey, 2016
 
-With an Arduino and inexepensive off-the-shelf shield, you can turn your Android device into an experimental ECG (EKG). Use this Android application, accompanying Arduino sketch, and Node.JS server code to collect and plot ECG data on your device and (soon) a server.
+With an Arduino and inexepensive off-the-shelf shield, you can turn your Android device into an experimental ECG (EKG). Use this Android application, accompanying Arduino sketch, and Node.JS server code to collect and plot ECG data on your device and a server.
 
 **The Architecture**
 The Olimex ECG Shield is precalibrated to sense a heartbeat using standard electrodes. That input is fed into an Arduino A/D channel. A small Arduino sketch collects data and passes those via Bluetooth to your Android device for plotting. The Android application has the capability to upload the sampled data via an HTTPS RESTful API. Data on the server is stored in a Mongo database.
@@ -31,7 +31,7 @@ This application uses the xxxx USB/BT library. I chose the Arduino Mega ADK for 
 
 <code>src/arduino/bt_ecgkit</code>- Arduino sketch (bt_ecgkit is the BLE version)
 
-<code>src/server/ecgsvc</code>- Node.JS based web service for uploading data sets
+<code>src/server/ecgsvc</code>- Node.JS based web service for uploading and viewing data sets
 
 
 **Arduino Build Notes**
