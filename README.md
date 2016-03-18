@@ -1,5 +1,6 @@
 #ecgkit
 An IoT-inspired Arduino Electrocardiograph Project
+
 Riley Rainey, 2016
 
 With an Arduino and inexepensive off-the-shelf shield, you can turn your Android device into an experimental ECG (EKG). Use this Android application, accompanying Arduino sketch, and Node.JS server code to collect and plot ECG data on your device and (soon) a server.
@@ -64,7 +65,9 @@ Bower needs some coaxing to install the browser JS components in the "public" fo
 Add these lines to the file:
 
 <code>{
+
   "directory" : "public/components"
+  
 }</code>
 
 You can then run Bower.
@@ -75,4 +78,4 @@ Start your MongoDB instance. Check the settings in <code>config.json</code>.  Up
 
 <code>$ node index.js</code># this will run the server
 
-For a simulated production environment, I run all of this on an Unbuntu server using the Node pm2 package to manage the service.
+For a simulated production environment, I run all of this on an Ubuntu server using the Node pm2 package to manage the service.
