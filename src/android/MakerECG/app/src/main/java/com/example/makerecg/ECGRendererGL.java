@@ -336,8 +336,9 @@ public class ECGRendererGL implements Renderer {
 			}
 			
 		}
-		
-		_fPlotYOrigin_div = 0.0f /*(short) -_sHalfHeight */;
+
+		// Olimex Sheild-specfic value
+		_fPlotYOrigin_div = /*0.0f*/ (short) _sHalfHeight;
 		
 		short sCurY = (short) -_sHalfHeight;
 		for ( ; sCurY<=_sHalfHeight; sCurY+=1) {
@@ -471,7 +472,7 @@ public class ECGRendererGL implements Renderer {
 	// Using the Olimex ECG board, I needed to reverse polarity to get the plot to look right
 	public float convertSampleToYCoordinate(short nSampleValue) {
 		// ADC sample arrives from the Arduino in the range 0..1023; scale to standard ECG plot grid
-		return (((float) nSampleValue / 1023.0f) * _fTotalScaling) + _fPlotYOrigin_div;
+		return (((float) - nSampleValue / 1023.0f) * _fTotalScaling) + _fPlotYOrigin_div;
 	}
 	
 	public float convertSampleToZCoordinate(short nSample) {

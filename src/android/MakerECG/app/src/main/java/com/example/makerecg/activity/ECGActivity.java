@@ -7,9 +7,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
-//import com.android.future.usb.UsbAccessory;
-//import com.android.future.usb.UsbManager;
-
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbManager;
 import android.content.Intent;
@@ -703,73 +700,6 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		}
 	}
 
-	/*
-	private void handleGetSensorsCommand(byte[] sensorBytes) {
-		if (gLogPackets)
-			Log.d(ADK.TAG,
-					"handleGetSensorsCommand: "
-							+ Utilities.dumpBytes(sensorBytes,
-									sensorBytes.length));
-		if (sensorBytes.length > 23) {
-			int sensorValues[] = Utilities.byteArrayToIntArray(sensorBytes);
-			int proxNormalized[] = {
-					sensorValues[20] | (sensorValues[21] << 8),
-					sensorValues[22] | (sensorValues[23] << 8),
-					sensorValues[24] | (sensorValues[25] << 8) };
-			proxNormalized[2] *= 3;
-			// find max
-			int proxMax = 0;
-			for (int i = 0; i < 3; i++)
-				if (proxMax < proxNormalized[i])
-					proxMax = proxNormalized[i];
-			proxMax++;
-			// normalize to 8-bits
-			for (int i = 0; i < 3; i++)
-				proxNormalized[i] = (proxNormalized[i] << 8) / proxMax;
-			final int exp[] = { 0, 19, 39, 59, 79, 100, 121, 143, 165, 187,
-					209, 232, 255, 279, 303, 327, 352, 377, 402, 428, 454, 481,
-					508, 536, 564, 592, 621, 650, 680, 710, 741, 772, 804, 836,
-					869, 902, 936, 970, 1005, 1040, 1076, 1113, 1150, 1187,
-					1226, 1264, 1304, 1344, 1385, 1426, 1468, 1511, 1554, 1598,
-					1643, 1688, 1734, 1781, 1829, 1877, 1926, 1976, 2026, 2078,
-					2130, 2183, 2237, 2292, 2348, 2404, 2461, 2520, 2579, 2639,
-					2700, 2762, 2825, 2889, 2954, 3020, 3088, 3156, 3225, 3295,
-					3367, 3439, 3513, 3588, 3664, 3741, 3819, 3899, 3980, 4062,
-					4146, 4231, 4317, 4404, 4493, 4583, 4675, 4768, 4863, 4959,
-					5057, 5156, 5257, 5359, 5463, 5568, 5676, 5785, 5895, 6008,
-					6122, 6238, 6355, 6475, 6597, 6720, 6845, 6973, 7102, 7233,
-					7367, 7502, 7640, 7780, 7922, 8066, 8213, 8362, 8513, 8666,
-					8822, 8981, 9142, 9305, 9471, 9640, 9811, 9986, 10162,
-					10342, 10524, 10710, 10898, 11089, 11283, 11480, 11681,
-					11884, 12091, 12301, 12514, 12731, 12951, 13174, 13401,
-					13632, 13866, 14104, 14345, 14591, 14840, 15093, 15351,
-					15612, 15877, 16147, 16421, 16699, 16981, 17268, 17560,
-					17856, 18156, 18462, 18772, 19087, 19407, 19733, 20063,
-					20398, 20739, 21085, 21437, 21794, 22157, 22525, 22899,
-					23279, 23666, 24058, 24456, 24861, 25272, 25689, 26113,
-					26544, 26982, 27426, 27878, 28336, 28802, 29275, 29756,
-					30244, 30740, 31243, 31755, 32274, 32802, 33338, 33883,
-					34436, 34998, 35568, 36148, 36737, 37335, 37942, 38559,
-					39186, 39823, 40469, 41126, 41793, 42471, 43159, 43859,
-					44569, 45290, 46023, 46767, 47523, 48291, 49071, 49863,
-					50668, 51486, 52316, 53159, 54016, 54886, 55770, 56668,
-					57580, 58506, 59447, 60403, 61373, 62359, 63361, 64378,
-					65412 };
-			for (int i = 0; i < 3; i++)
-				proxNormalized[i] = (exp[proxNormalized[i]] + 128) >> 8;
-
-			SharedPreferences.Editor editor = PreferenceManager
-					.getDefaultSharedPreferences(this).edit();
-			int color = (proxNormalized[0] << 16) | (proxNormalized[1] << 8)
-					| proxNormalized[2];
-			//TODO: disabled
-			//editor.putInt(Preferences.PREF_COLOR_SENSOR, color);
-			//
-			editor.commit();
-		}
-	}
-	*/
-
 	private void handleSettingsCommand(byte[] bufferBytes) {
 
 		ADSampleFrame f;
@@ -880,22 +810,6 @@ public class ECGActivity extends Activity implements Callback, Runnable {
 		case CMD_SETTINGS:
 			handleSettingsCommand((byte[]) msg.obj);
 			return true;
-		/*
-		case CMD_BT_NAME:
-			handleBtNameCommand((byte[]) msg.obj);
-		case CMD_GET_LICENSE:
-			handleLicenseTextCommand((byte[]) msg.obj);
-			return true;
-		case CMD_FILE_LIST:
-			handleFileListCommand((byte[]) msg.obj);
-			return true;
-		case CMD_ALARM_FILE:
-			handleAlarmFileCommand((byte[]) msg.obj);
-			return true;
-		case CMD_GET_SENSORS:
-			handleGetSensorsCommand((byte[]) msg.obj);
-			return true;
-		*/
 		case CMD_LOCK:
 			handleLockCommand((byte[]) msg.obj);
 			return true;
