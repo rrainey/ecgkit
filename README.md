@@ -1,8 +1,9 @@
 #ecgkit
 An IoT-inspired Arduino Electrocardiograph Project
+
 Riley Rainey, 2016
 
-With an Arduino and inexepensive off-the-shelf shield, you can turn your Android device into an experimental ECG (EKG). Use this Android application, accompanying Arduino sketch, and Node.JS server code to collect and plot ECG data on your device and (soon) a server.
+With an Arduino and inexepensive off-the-shelf shield, you can turn your Android device into an experimental ECG (EKG). Use this Android application, accompanying Arduino sketch, and Node.JS server code to collect and plot ECG data on your device and a server.
 
 **The Architecture**
 The Olimex ECG Shield is precalibrated to sense a heartbeat using standard electrodes. That input is fed into an Arduino A/D channel. A small Arduino sketch collects data and passes those via Bluetooth to your Android device for plotting. The Android application has the capability to upload the sampled data via an HTTPS RESTful API. Data on the server is stored in a Mongo database.
@@ -28,9 +29,9 @@ This application uses the xxxx USB/BT library. I chose the Arduino Mega ADK for 
 
 <code>src/android/MakerECG</code>- Android Studio project
 
-<code>src/arduino</code>- Arduino sketch
+<code>src/arduino/bt_ecgkit</code>- Arduino sketch (bt_ecgkit is the BLE version)
 
-<code>src/server/ecgsvc</code>- Node.JS based web service for uploading data sets
+<code>src/server/ecgsvc</code>- Node.JS based web service for uploading and viewing data sets
 
 
 **Arduino Build Notes**
@@ -64,7 +65,9 @@ Bower needs some coaxing to install the browser JS components in the "public" fo
 Add these lines to the file:
 
 <code>{
+
   "directory" : "public/components"
+  
 }</code>
 
 You can then run Bower.
@@ -75,4 +78,4 @@ Start your MongoDB instance. Check the settings in <code>config.json</code>.  Up
 
 <code>$ node index.js</code># this will run the server
 
-For a simulated production environment, I run all of this on an Unbuntu server using the Node pm2 package to manage the service.
+For a simulated production environment, I run all of this on an Ubuntu server using the Node pm2 package to manage the service.
