@@ -1,4 +1,6 @@
 /**
+ * Based on code from:
+ *
  * Copyright 2013-present NightWorld.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,9 +23,6 @@ var mongoose = require('mongoose'),
 
 var salt = bcrypt.genSaltSync(10);
 
-//
-// Schema definitions
-//
 var OAuthAccessTokensSchema = new Schema({
   accessToken: { type: String },
   clientId: { type: String },
@@ -65,9 +64,6 @@ var OAuthAccessTokensModel = mongoose.model('OAuthAccessTokens'),
 model.OAuthUsersModel = OAuthUsersModel;
 model.OAuthClientsModel = OAuthClientsModel;
 
-//
-// oauth2-server callbacks
-//
 model.getAccessToken = function (bearerToken, callback) {
   //console.log('in getAccessToken (bearerToken: ' + bearerToken + ')');
 
@@ -82,9 +78,9 @@ model.getClient = function (clientId, clientSecret, callback) {
   OAuthClientsModel.findOne({ clientId: clientId, clientSecret: clientSecret }, callback);
 };
 
-// This will very much depend on your setup, I wouldn't advise doing anything exactly like this but
-// it gives an example of how to use the method to restrict certain grant types
+// two simple client ID's for now.
 var authorizedClientIds = ['CLIENT_ID', 'CLIENT_ID2'];
+
 model.grantTypeAllowed = function (clientId, grantType, callback) {
   var result = false;
   //console.log('in grantTypeAllowed (clientId: ' + clientId + ', grantType: ' + grantType + ')');

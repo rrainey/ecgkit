@@ -40,12 +40,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="42d79f0e-5a36-49df-8450-3d449f3c4ebd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/makerecg/MakerECGApplication.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../../ecgkit-architecture.png" afterPath="$PROJECT_DIR$/../../../ecgkit-architecture.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/example/makerecg/activity/ECGActivity.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/makerecg/activity/ECGActivity.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/example/makerecg/ECGRendererGL.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/makerecg/ECGRendererGL.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/example/makerecg/Preferences.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/makerecg/Preferences.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../server/ecgsvc/index.js" afterPath="$PROJECT_DIR$/../../server/ecgsvc/index.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../server/ecgsvc/views/layouts/main.handlebars" afterPath="$PROJECT_DIR$/../../server/ecgsvc/views/layouts/main.handlebars" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../server/ecgsvc/models/model.js" afterPath="$PROJECT_DIR$/../../server/ecgsvc/models/model.js" />
@@ -2224,7 +2219,13 @@
       <option name="project" value="LOCAL" />
       <updated>1458252730510</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Fix polarity of Android plotting.">
+      <created>1459906627475</created>
+      <option name="number" value="00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1459906627476</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TodoView">
@@ -2292,7 +2293,8 @@
     <MESSAGE value="Chunk the sync into blocks of 50 frames." />
     <MESSAGE value="Update storage byte order. Update preferences selections." />
     <MESSAGE value="Verify storage byte order of samples (they are 16-bits; little-endian on device, big endian on server). Reset sample queue upon each Adruino reconnect." />
-    <option name="LAST_COMMIT_MESSAGE" value="Verify storage byte order of samples (they are 16-bits; little-endian on device, big endian on server). Reset sample queue upon each Adruino reconnect." />
+    <MESSAGE value="Fix polarity of Android plotting." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix polarity of Android plotting." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

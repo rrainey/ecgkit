@@ -1,5 +1,6 @@
 var express = require('express'),
     exphbs  = require('express-handlebars'),
+    session = require('express-session'),
     bodyParser = require('body-parser'),
     https = require('https'),
     oauthserver = require('oauth2-server'),
@@ -11,9 +12,33 @@ var express = require('express'),
     mongoose = require('mongoose'),
     nasync = require('async');
 
+
 mongoose.connect(config.mongoConnection);
+
+function restrict(req, res, next) {
+    if (req.session.user) {
+        next();
+    } 
+    else {
+        res.redirect('/login');
+    }
+}
  
 var app = express();
+
+MongoStore = require('connect-mongo/es5')(session);
+
+app.use(session({
+    secret: 'ecg',
+    store: new MongoStore( {
+        url: config.mongoConnection,
+        autoRemove: 'interval',
+        autoRemoveInterval: 120     // minutes
+    }
+    ),
+    resave: true,
+    saveUninitialized: true
+}));
 
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
@@ -31,16 +56,17 @@ app.oauth = oauthserver({
     grants: ['password'],
     debug: false,
     accessTokenLifetime: 3600*24*365,
+    //continueAfterResponse: true
 });
  
 app.all('/oauth/token', app.oauth.grant());
 
 app.get('/login', function (req, res) {
-    res.render('login');
+    res.render('login', {session: req.session});
 });
 
-app.get('/ecg', function (req, res) {
-    res.render('ecg');
+app.get('/ecg', restrict, function (req, res) {
+    res.render('ecg', {session: req.session});
 });
 
 app.post('/api/sampleframe', app.oauth.authorise(), function(req, res) {
